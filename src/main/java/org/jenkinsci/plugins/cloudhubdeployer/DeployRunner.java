@@ -79,7 +79,7 @@ public class DeployRunner {
 
         loginResponseRaw = CloudHubRequestUtils.login(cloudHubRequest);
 
-        if(JsonHelper.checkIfKeyExists(loginResponseRaw,Constants.LABEL_ACCESS_TOKEN))
+        if(!JsonHelper.checkIfKeyExists(loginResponseRaw,Constants.LABEL_ACCESS_TOKEN))
             throw new CloudHubRequestException("CloudHub login request failed.");
 
 

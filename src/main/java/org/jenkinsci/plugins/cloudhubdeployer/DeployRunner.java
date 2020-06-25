@@ -123,10 +123,10 @@ public class DeployRunner {
         }
 
         if(!cloudHubRequest.getRequestMode().equals(RequestMode.DELETE) && cloudHubDeployer.isVerifyDeployments()){
-            DeployHelper.logOutputStandard(logger,"Verify Deployment is set. Verifying API Status");
+            DeployHelper.logOutputStandard(logger,"Verify deployment is set. Verifying API status");
             apiStatus = checkIfApiStarted(cloudHubRequest,logger, cloudHubDeployer.getVerifyIntervalInSeconds());
         }else {
-            DeployHelper.logOutputStandard(logger,"Verify Deployment is not set. Check API status on cloudhub");
+            DeployHelper.logOutputStandard(logger,"Verify deployment is not set. Check API status on cloudhub");
             apiStatus = true;
         }
 

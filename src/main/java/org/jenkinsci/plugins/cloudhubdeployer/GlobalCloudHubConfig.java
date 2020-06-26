@@ -1,10 +1,14 @@
 package org.jenkinsci.plugins.cloudhubdeployer;
 import com.cloudbees.plugins.credentials.CredentialsMatchers;
 import com.cloudbees.plugins.credentials.CredentialsProvider;
-import com.cloudbees.plugins.credentials.common.StandardCredentials;
-import com.cloudbees.plugins.credentials.common.StandardListBoxModel;
-import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
+import com.cloudbees.plugins.credentials.common.*;
 import com.cloudbees.plugins.credentials.domains.DomainRequirement;
+import com.cloudbees.plugins.credentials.domains.URIRequirementBuilder;
+import hudson.model.Queue;
+import hudson.model.queue.Tasks;
+import hudson.security.Permission;
+import jenkins.model.Jenkins;
+import org.apache.commons.lang.StringUtils;
 import org.jenkinsci.plugins.cloudhubdeployer.common.DebugMode;
 import org.jenkinsci.plugins.cloudhubdeployer.utils.Constants;
 import hudson.Extension;
@@ -21,6 +25,7 @@ import net.sf.json.JSONObject;
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
+import org.kohsuke.stapler.verb.POST;
 
 import java.io.IOException;
 import java.net.HttpURLConnection;
@@ -93,14 +98,22 @@ public class GlobalCloudHubConfig extends GlobalPluginConfiguration {
             return DebugMode.DISABLED;
         }
 
-        public ListBoxModel doFillCredentialsIdItems(@AncestorInPath Item item) {
+        public ListBoxModel doFillCredentialsIdItems(@AncestorInPath Item item, @QueryParameter String url,
+                                                     @QueryParameter String credentialsId) {
 
-            final List<StandardCredentials> credentials = CredentialsProvider.lookupCredentials(StandardCredentials.class, item, ACL.SYSTEM, Collections.<DomainRequirement>emptyList());
+            if (item == null && !Jenkins.get().hasPermission(Jenkins.ADMINISTER) ||
+                    item != null && !item.hasPermission(Item.EXTENDED_READ)) {
+                return new StandardListBoxModel().includeCurrentValue(credentialsId);
+            }
 
             return new StandardListBoxModel()
-                    .withEmptySelection()
-                    //.withAll(credentials);
-                    .withMatching(CredentialsMatchers.anyOf(CredentialsMatchers.instanceOf(StandardUsernamePasswordCredentials.class)), credentials);
+                    .includeEmptyValue()
+                    .includeMatchingAs(
+                            item instanceof Queue.Task
+                                    ? Tasks.getAuthenticationOf((Queue.Task) item) : ACL.SYSTEM,
+                            item, StandardUsernameCredentials.class, URIRequirementBuilder.fromUri(url).build(),
+                            CredentialsMatchers.instanceOf(StandardUsernamePasswordCredentials.class))
+                    .includeCurrentValue(credentialsId);
         }
 
         @Override
@@ -137,26 +150,32 @@ public class GlobalCloudHubConfig extends GlobalPluginConfiguration {
             return super.configure(req, formData);
         }
 
+        @POST
         public FormValidation doTestConnection(@QueryParameter String credentialsId) {
 
+            Jenkins.get().checkPermission(Permission.CONFIGURE);
             LOGGER.info(String.format("Testing CloudHub connectivity."));
 
             //Validation
-            if (credentialsId.isEmpty()) {
+            if (!StringUtils.isNotBlank(credentialsId)) {
                 return FormValidation.warning("Please Specify valid credentials to test");
             }
 
             try {
+
                 URL url = new URL(Constants.CLOUDHUB_URL + Constants.URI_LOGIN);
+
                 URLConnection connection = url.openConnection();
                 if (connection instanceof HttpURLConnection) {
                     HttpURLConnection httpConnection = (HttpURLConnection) connection;
                     httpConnection.setRequestMethod("POST");
+                    httpConnection.setRequestProperty(Constants.LABEL_CONTENT_TYPE, Constants.MEDIA_TYPE_APP_JSON);
+                    httpConnection.setRequestProperty(Constants.LABEL_ACCEPT, Constants.MEDIA_TYPE_APP_JSON);
 
                     int code = httpConnection.getResponseCode();
                     httpConnection.disconnect();
                     if (code > 400) {
-                        return FormValidation.error("Could not connect to %s, with GET request. Code %s",
+                        return FormValidation.error("Could not connect to %s, with POST request. Code %s",
                                 Constants.CLOUDHUB_URL, code);
                     }
                 }

@@ -4,6 +4,8 @@ import com.cloudbees.plugins.credentials.CredentialsMatchers;
 import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.common.*;
 import com.cloudbees.plugins.credentials.domains.DomainRequirement;
+import com.cloudbees.plugins.credentials.domains.URIRequirementBuilder;
+import hudson.model.queue.Tasks;
 import org.jenkinsci.plugins.cloudhubdeployer.common.RequestMode;
 import org.jenkinsci.plugins.cloudhubdeployer.data.LogLevels;
 import org.jenkinsci.plugins.cloudhubdeployer.exception.CloudHubRequestException;
@@ -34,6 +36,9 @@ import java.util.Collections;
 import java.util.List;
 import java.util.logging.Logger;
 import lombok.Getter;
+
+import static com.cloudbees.plugins.credentials.CredentialsMatchers.anyOf;
+import static com.cloudbees.plugins.credentials.CredentialsMatchers.instanceOf;
 
 
 public class CloudHubDeployer extends Builder implements SimpleBuildStep {
@@ -564,17 +569,31 @@ public class CloudHubDeployer extends Builder implements SimpleBuildStep {
             }
         }
 
-        public ListBoxModel doFillCredentialsIdItems(@AncestorInPath Item item) {
+        public ListBoxModel doFillCredentialsIdItems(@AncestorInPath Item item, @QueryParameter String url,
+                                                     @QueryParameter String credentialsId) {
 
-            final List<StandardCredentials> credentials = CredentialsProvider.lookupCredentials(StandardCredentials.class, item, ACL.SYSTEM, Collections.<DomainRequirement>emptyList());
+            if (item == null && !Jenkins.get().hasPermission(Jenkins.ADMINISTER) ||
+                    item != null && !item.hasPermission(Item.EXTENDED_READ)) {
+                return new StandardListBoxModel().includeCurrentValue(credentialsId);
+            }
 
             return new StandardListBoxModel()
-                    .withEmptySelection()
-                    .withMatching(CredentialsMatchers.anyOf(
-                            CredentialsMatchers.instanceOf(StandardUsernamePasswordCredentials.class)), credentials);
+                    .includeEmptyValue()
+                    .includeMatchingAs(
+                            item instanceof Queue.Task
+                                    ? Tasks.getAuthenticationOf((Queue.Task) item) : ACL.SYSTEM,
+                            item, StandardUsernameCredentials.class, URIRequirementBuilder.fromUri(url).build(),
+                            CredentialsMatchers.instanceOf(StandardUsernamePasswordCredentials.class))
+                    .includeCurrentValue(credentialsId);
         }
 
-        public FormValidation doCheckCredentialsId(@QueryParameter final String credentialsId) {
+        public FormValidation doCheckCredentialsId(@AncestorInPath Item project,
+                                                   @QueryParameter final String credentialsId) {
+
+            if (project == null && !Jenkins.get().hasPermission(Jenkins.ADMINISTER) ||
+                    project != null && !project.hasPermission(Item.EXTENDED_READ)) {
+                return FormValidation.ok();
+            }
 
             if (Strings.isNullOrEmpty(credentialsId)) {
                 return FormValidation.error("Please fill in CloudHub credentials");

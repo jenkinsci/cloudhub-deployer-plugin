@@ -1,5 +1,6 @@
 package org.jenkinsci.plugins.cloudhubdeployer.utils;
 
+import com.google.common.base.Strings;
 import org.jenkinsci.plugins.cloudhubdeployer.CloudHubDeployer;
 import org.jenkinsci.plugins.cloudhubdeployer.common.RequestMode;
 import org.jenkinsci.plugins.cloudhubdeployer.exception.CloudHubRequestException;
@@ -65,19 +66,19 @@ public final class DeployHelper {
 
     private static void validate(CloudHubDeployer cloudhubDeployer) throws CloudHubRequestException {
 
-            if(null == cloudhubDeployer.getWorkerCpu() || cloudhubDeployer.getWorkerCpu().isEmpty()){
+            if(Strings.isNullOrEmpty(cloudhubDeployer.getWorkerCpu())){
                 throw new CloudHubRequestException("Please enter Worker Cpu");
             }
 
-            if(null == cloudhubDeployer.getWorkerMemory() || cloudhubDeployer.getWorkerMemory().isEmpty()){
+            if(Strings.isNullOrEmpty(cloudhubDeployer.getWorkerMemory())){
                 throw new CloudHubRequestException("Please enter Worker Memory");
             }
 
-            if(null == cloudhubDeployer.getWorkerType() || cloudhubDeployer.getWorkerType().isEmpty()){
+            if(Strings.isNullOrEmpty(cloudhubDeployer.getWorkerType())){
                 throw new CloudHubRequestException("Please enter Worker Type");
             }
 
-            if(null == cloudhubDeployer.getWorkerWeight() || cloudhubDeployer.getWorkerWeight().isEmpty()){
+            if(Strings.isNullOrEmpty(cloudhubDeployer.getWorkerWeight())){
                 throw new CloudHubRequestException("Please enter Worker Weight");
             }
 
@@ -85,15 +86,15 @@ public final class DeployHelper {
                 throw new CloudHubRequestException("Worker Amount can not be zero");
             }
 
-            if(null == cloudhubDeployer.getAppName() || cloudhubDeployer.getAppName().isEmpty()){
+            if(Strings.isNullOrEmpty(cloudhubDeployer.getAppName())){
                 throw new CloudHubRequestException("Please enter Application Name");
             }
 
-            if(null == cloudhubDeployer.getMuleVersion() || cloudhubDeployer.getMuleVersion().isEmpty()){
+            if(Strings.isNullOrEmpty(cloudhubDeployer.getMuleVersion())){
                 throw new CloudHubRequestException("Please enter Mule Version");
             }
 
-            if(null == cloudhubDeployer.getRegion() || cloudhubDeployer.getRegion().isEmpty()){
+            if(Strings.isNullOrEmpty(cloudhubDeployer.getRegion())){
                 throw new CloudHubRequestException("Please enter Region");
             }
 

@@ -329,7 +329,7 @@ public final class CloudHubRequestUtils {
                 .setConnectionRequestTimeout(cloudhubRequest.getTimeoutResponse())
                 .build();
 
-        //httpRequestBase.setConfig(requestConfig);
+        httpRequestBase.setConfig(requestConfig);
 
         return httpclient;
     }

@@ -122,8 +122,12 @@ public class DeployRunner {
                         "Allowed values CREATE, UPDATE, CREATE_OR_UPDATE, UPDATE_FILE, RESTART or DELETE");
         }
 
+        if(null != cloudhubResponseBody)
+            DeployHelper.logOutputStandard(logger,"API " + cloudHubRequest.getRequestMode().toString().toLowerCase()
+                    + " request on CloudHub is successful");
+
         if(!cloudHubRequest.getRequestMode().equals(RequestMode.DELETE) && cloudHubDeployer.isVerifyDeployments()){
-            DeployHelper.logOutputStandard(logger,"Verify deployment is set. Verifying API status");
+            DeployHelper.logOutputStandard(logger,"Verify deployment is set. Waiting for API to get started.");
             apiStatus = checkIfApiStarted(cloudHubRequest,logger, cloudHubDeployer.getVerifyIntervalInSeconds());
         }else {
             DeployHelper.logOutputStandard(logger,"Verify deployment is not set. Check API status on cloudhub");

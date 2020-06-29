@@ -12,8 +12,8 @@
             <f:textbox />
         </f:entry>
 
-        <f:entry field="timeoutConnection" name="timeoutConnection" title="Connection timeout (10000)">
-            <f:number default="10000"/>
+        <f:entry field="timeoutConnection" name="timeoutConnection" title="Connection timeout (30000)">
+            <f:number default="30000"/>
         </f:entry>
 
         <f:entry field="timeoutResponse" name="timeoutResponse" title="Response timeout (120000)">

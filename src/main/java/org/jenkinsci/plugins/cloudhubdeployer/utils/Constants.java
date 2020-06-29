@@ -10,8 +10,8 @@ public final class Constants {
 
     public static final String PLUGIN_NAME = "CloudHub Deployer";
     public static final String PLUGIN_LABEL = "cloudhub deployer";
-    public static final Integer TIMEOUT_CONNECTION = 10000;
-    public static final Integer TIMEOUT_RESPONSE = 30000;
+    public static final Integer TIMEOUT_CONNECTION = 30000;
+    public static final Integer TIMEOUT_RESPONSE = 120000;
     public static final String LABEL_CONTENT_TYPE = "Content-Type";
     public static final String LABEL_ACCEPT = "Accept";
     public static final String CLOUDHUB_URL = "https://anypoint.mulesoft.com";
@@ -48,7 +48,7 @@ public final class Constants {
     public static final String DEFAULT_WORKER_TYPE = "Small";
     public static final String DEFAULT_WORKER_WEIGHT = "0.2";
     public static final String DEFAULT_WORKER_CPU = "0.2";
-    public static final String DEFAULT_WORKER_MEMORY = "1";
+    public static final String DEFAULT_WORKER_MEMORY = "1 GB";
     public static final boolean DEFAULT_MONITORING_ENABLED = false;
     public static final boolean DEFAULT_MONITORING_AUTO_RESTART = false;
     public static final boolean DEFAULT_LOGGING_NG_ENABLED = false;

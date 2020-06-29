@@ -2,7 +2,7 @@
 
 This plugin adds Cloudhub deployment abilities to build steps.
 
-This plugin allows you to deploy into Cloudhub, Updating API with new Version, Restarting and Deleting API.
+This plugin allows you to create, update, restart and delete Cloudhub applications.
 
 Github link: https://github.com/vrnvikas/cloudhub-deployer-plugin
 

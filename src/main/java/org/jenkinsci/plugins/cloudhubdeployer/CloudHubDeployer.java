@@ -395,8 +395,6 @@ public class CloudHubDeployer extends Builder implements SimpleBuildStep {
     @Override
     public void perform(Run<?, ?> run, @Nonnull FilePath workspace, @Nonnull Launcher launcher,
                         @Nonnull TaskListener listener) throws InterruptedException, IOException {
-        final hudson.EnvVars environment = run.getEnvironment(listener);
-        final PrintStream logger = listener.getLogger();
 
         try {
 

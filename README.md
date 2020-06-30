@@ -137,8 +137,8 @@ The following table lists the configurable parameters for the plugin and their d
 | `muleVersion`               |  `none`                                                     |
 | `region`                    |  `none`                                                     |
 | `filePath`                  |  `none`                                                     |
-| `timeoutConnection`         |  `10000`                                                    |
-| `timeoutResponse`           |  `30000`                                                    |
+| `timeoutConnection`         |  `120000`                                                    |
+| `timeoutResponse`           |  `120000`                                                    |
 | `debugMode`                 |  `disabled`                                                 |
 | `ignoreGlobalSettings`      |  `false`                                                    |
 | `autoStart`                 |  `true`                                                     |

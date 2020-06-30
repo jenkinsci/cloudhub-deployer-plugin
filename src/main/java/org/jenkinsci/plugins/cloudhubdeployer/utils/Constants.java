@@ -10,7 +10,7 @@ public final class Constants {
 
     public static final String PLUGIN_NAME = "CloudHub Deployer";
     public static final String PLUGIN_LABEL = "cloudhub deployer";
-    public static final Integer TIMEOUT_CONNECTION = 30000;
+    public static final Integer TIMEOUT_CONNECTION = 120000;
     public static final Integer TIMEOUT_RESPONSE = 120000;
     public static final String LABEL_CONTENT_TYPE = "Content-Type";
     public static final String LABEL_ACCEPT = "Accept";

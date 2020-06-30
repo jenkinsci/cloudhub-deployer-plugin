@@ -12,8 +12,8 @@
             <f:textbox />
         </f:entry>
 
-        <f:entry field="timeoutConnection" name="timeoutConnection" title="Connection timeout (30000)">
-            <f:number default="30000"/>
+        <f:entry field="timeoutConnection" name="timeoutConnection" title="Connection timeout (120000)">
+            <f:number default="120000"/>
         </f:entry>
 
         <f:entry field="timeoutResponse" name="timeoutResponse" title="Response timeout (120000)">
@@ -160,7 +160,7 @@
           <f:optionalBlock field="verifyInterval" title="Verify Deployments" checked="${instance==null?true:instance.verifyDeployments}" inline="true">
 
             <f:entry field="verifyIntervalInSeconds" title="${%Verify Interval in Seconds}">
-              <f:textbox type="number" default="20000"/>
+              <f:textbox type="number" default="30000"/>
             </f:entry>
           </f:optionalBlock>
         </table>

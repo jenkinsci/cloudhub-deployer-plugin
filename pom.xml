@@ -10,7 +10,7 @@
 
     <groupId>io.jenkins.plugins</groupId>
     <artifactId>cloudhub-deployer</artifactId>
-    <version>0.1-SNAPSHOT</version>
+    <version>0.1.0-SNAPSHOT</version>
     <packaging>hpi</packaging>
     <properties>
         <!-- Baseline Jenkins version you use to build the plugin. Users must have this version or newer to run. -->
@@ -28,7 +28,7 @@
     </properties>
     <name>CloudHub Deployer</name>
     <description>
-        This plugin allows you to deploy into CloudHub
+        A Jenkins plugin to deploys API to CloudHub.
     </description>
     <inceptionYear>2020</inceptionYear>
     <!-- The default licence for Jenkins OSS Plugins is MIT. Substitute for the applicable one if needed. -->
@@ -126,14 +126,13 @@
         </dependency>
     </dependencies>
 
-    <!-- Assuming you want to host on @jenkinsci:
     <url>https://github.com/jenkinsci/${project.artifactId}-plugin</url>
     <scm>
         <connection>scm:git:git://github.com/jenkinsci/${project.artifactId}-plugin.git</connection>
         <developerConnection>scm:git:git@github.com:jenkinsci/${project.artifactId}-plugin.git</developerConnection>
         <url>https://github.com/jenkinsci/${project.artifactId}-plugin</url>
     </scm>
-    -->
+   
     <repositories>
         <repository>
             <id>repo.jenkins-ci.org</id>

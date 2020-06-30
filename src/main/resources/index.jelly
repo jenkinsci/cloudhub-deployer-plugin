@@ -1,4 +1,4 @@
 <?jelly escape-by-default='true'?>
 <div>
-  A Jenkins plugin to deploys api to CloudHub.
+  A Jenkins plugin to deploys API to CloudHub.
 </div>

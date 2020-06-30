@@ -28,7 +28,7 @@
     </properties>
     <name>CloudHub Deployer</name>
     <description>
-        A Jenkins plugin to deploys API to CloudHub.
+        A Jenkins plugin to deploy API to CloudHub.
     </description>
     <inceptionYear>2020</inceptionYear>
     <!-- The default licence for Jenkins OSS Plugins is MIT. Substitute for the applicable one if needed. -->

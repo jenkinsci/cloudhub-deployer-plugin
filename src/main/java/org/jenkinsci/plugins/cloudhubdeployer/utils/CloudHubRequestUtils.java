@@ -290,6 +290,44 @@ public final class CloudHubRequestUtils {
         return responseBody;
     }
 
+    public static String createAutoScalePolicy(final CloudHubRequest cloudhubRequest) throws CloudHubRequestException {
+
+        HttpPut httpPut = new HttpPut(Constants.CLOUDHUB_URL + Constants.API_URI + Constants.URI_APPLICATION
+                + "/" + cloudhubRequest.getApiDomainName());
+
+        CloseableHttpClient httpclient = HttpClients.createDefault();
+
+        httpPut.addHeader(Constants.LABEL_ANYPNT_ENV_ID,cloudhubRequest.getEnvId());
+        httpPut.addHeader(Constants.LABEL_AUTHORIZATION,"Bearer " + cloudhubRequest.getAccessToken());
+
+        String responseBody = null;
+
+        MultipartEntityBuilder builder = MultipartEntityBuilder.create()
+                .setMode(HttpMultipartMode.BROWSER_COMPATIBLE)
+                .addTextBody(Constants.LABEL_AUTOSTART, cloudhubRequest.getAutoStart())
+                .addTextBody(Constants.LABEL_APP_INFO_JSON, new Gson().toJson(cloudhubRequest.getAppInfoJson()));
+
+
+
+        try {
+
+            HttpEntity multipart = builder.build();
+            httpPut.setEntity(multipart);
+
+            ResponseHandler<String> responseHandler = CloudHubRequestUtils.getResponseHandler(cloudhubRequest
+                    .getDebugMode(), cloudhubRequest.getLogger());
+
+            responseBody = httpclient.execute(httpPut, responseHandler);
+
+        } catch (IOException ioe) {
+            cloudhubRequest.getLogger().println(ExceptionUtils.getFullStackTrace(ioe));
+            throw new CloudHubRequestException("Cloudhub update App Failed.");
+        } finally {
+            CloudHubRequestUtils.closeHttpClient(httpclient, cloudhubRequest);
+        }
+        return responseBody;
+    }
+
     private static ResponseHandler<String> getResponseHandler(final DebugMode debugMode, final PrintStream logger) {
 
         return response -> {

@@ -151,11 +151,48 @@
           </f:entry>
    </f:section>
 
+   <f:section title="Add AutoScale Policy">
+        <f:block>
+                <table>
+                  <f:optionalBlock field="enableAutoScalePolicy" title="Enable AutoScale Policy" checked="${instance==null?true:instance.enableAutoScalePolicy}" inline="true">
+                    <f:entry field="autoScalePolicyName" title="${%Policy Name}">
+                      <f:textbox/>
+                    </f:entry>
+                    <f:entry field="scaleBasedOn" title="${%Scale Based On}">
+                       <f:textbox/>
+                     </f:entry>
+                     <f:entry field="scaleUpValue" title="${%Scale Up Threshold Value %}">
+                        <f:textbox/>
+                      </f:entry>
+                     <f:entry field="scaleUpPeriodCount" title="${%Scale Up Threshold Value Duration}">
+                      <f:textbox/>
+                      </f:entry>
+                     <f:entry field="scaleDownValue" title="${%Scale Down Threshold Value %}">
+                        <f:textbox/>
+                     </f:entry>
+                     <f:entry field="scaleDownPeriodCount" title="${%Scale Down Threshold Value Duration}">
+                          <f:textbox/>
+                     </f:entry>
+                     <f:entry field="scaleType" title="${%Modify}">
+                          <f:textbox/>
+                      </f:entry>
+                      <f:entry field="maxScale" title="${%max Scale To}">
+                           <f:textbox/>
+                      </f:entry>
+                      <f:entry field="minScale" title="${%Min Scale To}">
+                           <f:textbox/>
+                       </f:entry>
+
+                  </f:optionalBlock>
+                </table>
+         </f:block>
+   </f:section>
+
   <f:section title="Advanced Options">
 
   </f:section>
 
-  <f:block>
+      <f:block>
         <table>
           <f:optionalBlock field="verifyInterval" title="Verify Deployments" checked="${instance==null?true:instance.verifyDeployments}" inline="true">
 

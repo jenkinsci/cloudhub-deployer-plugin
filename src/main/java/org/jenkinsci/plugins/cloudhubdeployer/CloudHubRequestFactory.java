@@ -118,7 +118,6 @@ public class CloudHubRequestFactory {
         return this;
     }
 
-
     public CloudHubRequest build() throws ValidationException {
         this.validate();
         return this.cloudHubRequest;

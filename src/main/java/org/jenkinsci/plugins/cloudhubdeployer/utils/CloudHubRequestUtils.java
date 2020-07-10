@@ -364,7 +364,8 @@ public final class CloudHubRequestUtils {
         try {
 
 
-            httpPut.setEntity(new StringEntity(new Gson().toJson(cloudhubRequest.getAutoScalePolicy().get(0))));
+            httpPut.setEntity(new StringEntity(new Gson().toJson(
+                    cloudhubRequest.getAutoScalePolicy().get(Constants.DRAFULT_POLICY_INDEX))));
 
             ResponseHandler<String> responseHandler = CloudHubRequestUtils.getResponseHandler(cloudhubRequest
                     .getDebugMode(), cloudhubRequest.getLogger());

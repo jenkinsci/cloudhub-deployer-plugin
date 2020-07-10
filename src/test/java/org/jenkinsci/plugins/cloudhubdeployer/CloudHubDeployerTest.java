@@ -1,24 +1,16 @@
 package org.jenkinsci.plugins.cloudhubdeployer;
 
 import org.jenkinsci.plugins.cloudhubdeployer.common.DebugMode;
-import org.jenkinsci.plugins.cloudhubdeployer.common.LogLevelCategory;
 import org.jenkinsci.plugins.cloudhubdeployer.common.RequestMode;
 import org.jenkinsci.plugins.cloudhubdeployer.data.EnvVars;
 import org.jenkinsci.plugins.cloudhubdeployer.data.LogLevels;
-import org.jenkinsci.plugins.cloudhubdeployer.exception.BuilderException;
-import hudson.model.FreeStyleBuild;
-import hudson.model.FreeStyleProject;
-import org.apache.commons.io.FileUtils;
 import org.jenkinsci.plugins.cloudhubdeployer.utils.Constants;
 import org.junit.Rule;
-import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
-import static org.hamcrest.CoreMatchers.containsString;
+
 import static org.junit.Assert.assertThat;
 
 /**
@@ -56,7 +48,7 @@ public class CloudHubDeployerTest {
     private static final List<LogLevels> LOG_LEVELS = new ArrayList<>();
     private static final boolean VERIFY_DEPLOYMENTS = false;
     private static final String LOGIN_REQUEST_FAILED = "Login Request failed: ";
-    private static final String ASSERT_LOG_TEXT = Constants.LABEL_ACCESS_TOKEN;
+    private static final String ASSERT_LOG_TEXT = Constants.JSON_KEY_ACCESS_TOKEN;
 
 
     @Rule

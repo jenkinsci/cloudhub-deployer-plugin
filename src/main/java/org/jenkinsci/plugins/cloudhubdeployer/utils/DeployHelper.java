@@ -2,6 +2,7 @@ package org.jenkinsci.plugins.cloudhubdeployer.utils;
 
 import com.google.common.base.Strings;
 import com.google.gson.Gson;
+import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import org.jenkinsci.plugins.cloudhubdeployer.CloudHubDeployer;
 import org.jenkinsci.plugins.cloudhubdeployer.CloudHubRequest;
@@ -199,7 +200,7 @@ public final class DeployHelper {
             while (isDeploymentInProgress) {
                 String apiStatus = CloudHubRequestUtils.apiStatus(cloudHubRequest);
                 String status = new Gson().fromJson(apiStatus, JsonObject.class)
-                        .get(Constants.LABEL_API_STATUS).getAsString();
+                        .get(Constants.JSON_KEY_API_STATUS).getAsString();
                 if(status.equals(ApiStatus.STARTED.toString())){
                     isDeploymentInProgress = false;
                     isApiStarted = true;
@@ -215,14 +216,14 @@ public final class DeployHelper {
         }else {
             while (isDeploymentInProgress) {
                 String apiStatus = CloudHubRequestUtils.apiStatus(cloudHubRequest);
-                if (JsonHelper.checkIfKeyExists(apiStatus, Constants.LABEL_DEPLOYMENT_UPDATE_STATUS)) {
+                if (JsonHelper.checkIfKeyExists(apiStatus, Constants.JSON_KEY_DEPLOYMENT_UPDATE_STATUS)) {
                     String deploymentUpdateStatus = new Gson().fromJson(apiStatus, JsonObject.class)
-                            .get(Constants.LABEL_DEPLOYMENT_UPDATE_STATUS).getAsString();
+                            .get(Constants.JSON_KEY_DEPLOYMENT_UPDATE_STATUS).getAsString();
                     logger.println("API update is in progress");
                     Thread.sleep(verifyIntervalInSeconds);
                 }else {
                     String status = new Gson().fromJson(apiStatus, JsonObject.class)
-                            .get(Constants.LABEL_API_STATUS).getAsString();
+                            .get(Constants.JSON_KEY_API_STATUS).getAsString();
                     if(status.equals(ApiStatus.STARTED.toString())){
                         isApiStarted = true;
                         logger.println("API update is completed");
@@ -240,17 +241,33 @@ public final class DeployHelper {
 
     public static void validateAutoScalePolicy(List<AutoScalePolicy> policy) throws ValidationException {
 
-        AutoScalePolicy autoScalePolicy = policy.get(0);
+        AutoScalePolicy autoScalePolicy = policy.get(Constants.DRAFULT_POLICY_INDEX);
 
         if(Strings.isNullOrEmpty(autoScalePolicy.getAutoScalePolicyName())){
             throw new ValidationException("Please enter AutoScale Policy Name");
         }
     }
 
-    public static boolean checkIfAutoScalePolicyExists(CloudHubRequest cloudHubRequest, PrintStream logger) throws CloudHubRequestException {
+    public static JsonArray checkIfAutoScalePolicyExists(CloudHubRequest cloudHubRequest, PrintStream logger)
+            throws CloudHubRequestException {
         String cloudhubResponseBody = CloudHubRequestUtils.getAutoScalePolicy(cloudHubRequest);
 
-        logger.println(cloudhubResponseBody);
-        return false;
+        return new Gson().fromJson(cloudhubResponseBody,JsonArray.class);
+    }
+
+    public static List<AutoScalePolicy> getFinalAutoScalePolicy(List<AutoScalePolicy> policyList, JsonArray policyJsonArray) {
+
+        int defaultIndex = Constants.DRAFULT_POLICY_INDEX;
+
+        JsonObject jsonObject = policyJsonArray.get(defaultIndex).getAsJsonObject();
+
+        AutoScalePolicy autoScalePolicy = policyList.get(defaultIndex);
+
+        autoScalePolicy.setId(jsonObject.get(Constants.JSON_KEY_AUTOSCALE_POLICY_ID).getAsString());
+        autoScalePolicy.setEnableAutoScalePolicy(true);
+
+        policyList.set(defaultIndex,autoScalePolicy);
+
+        return policyList;
     }
 }

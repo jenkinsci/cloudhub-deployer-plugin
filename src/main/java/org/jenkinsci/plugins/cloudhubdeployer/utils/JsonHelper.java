@@ -13,7 +13,7 @@ public final class JsonHelper {
     }
 
     public static String parseAccessToken(String loginResponse){
-        return new Gson().fromJson(loginResponse, JsonObject.class).get(Constants.LABEL_ACCESS_TOKEN).getAsString();
+        return new Gson().fromJson(loginResponse, JsonObject.class).get(Constants.JSON_KEY_ACCESS_TOKEN).getAsString();
     }
 
     public static boolean checkIfApiExists(String response, String domainName) {

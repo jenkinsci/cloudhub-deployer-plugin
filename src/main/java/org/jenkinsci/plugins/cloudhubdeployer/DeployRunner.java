@@ -2,17 +2,14 @@ package org.jenkinsci.plugins.cloudhubdeployer;
 
 import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.common.StandardCredentials;
-import org.jenkinsci.plugins.cloudhubdeployer.common.ApiStatus;
+import com.google.gson.JsonArray;
 import org.jenkinsci.plugins.cloudhubdeployer.common.RequestMode;
-import org.jenkinsci.plugins.cloudhubdeployer.data.AutoScalePolicy;
 import org.jenkinsci.plugins.cloudhubdeployer.exception.CloudHubRequestException;
 import org.jenkinsci.plugins.cloudhubdeployer.exception.ValidationException;
 import org.jenkinsci.plugins.cloudhubdeployer.utils.CloudHubRequestUtils;
 import org.jenkinsci.plugins.cloudhubdeployer.utils.Constants;
 import org.jenkinsci.plugins.cloudhubdeployer.utils.DeployHelper;
 import org.jenkinsci.plugins.cloudhubdeployer.utils.JsonHelper;
-import com.google.gson.Gson;
-import com.google.gson.JsonObject;
 import hudson.FilePath;
 import hudson.Launcher;
 import hudson.model.Run;
@@ -74,7 +71,7 @@ public class DeployRunner {
 
         loginResponseRaw = CloudHubRequestUtils.login(cloudHubRequest);
 
-        if(!JsonHelper.checkIfKeyExists(loginResponseRaw,Constants.LABEL_ACCESS_TOKEN))
+        if(!JsonHelper.checkIfKeyExists(loginResponseRaw,Constants.JSON_KEY_ACCESS_TOKEN))
             throw new CloudHubRequestException("CloudHub login request failed.");
 
 
@@ -120,10 +117,17 @@ public class DeployRunner {
 
 
         if(cloudHubRequest.isAutoScalePolicyEnabled()){
-            if(DeployHelper.checkIfAutoScalePolicyExists(cloudHubRequest,logger)){
-                cloudhubResponseBody = CloudHubRequestUtils.createAutoScalePolicy(cloudHubRequest);
-            }else{
+
+            JsonArray policyJsonArray = DeployHelper.checkIfAutoScalePolicyExists(cloudHubRequest,logger);
+
+            if(policyJsonArray.size() > 0){
+
+                cloudHubRequest.setAutoScalePolicy(DeployHelper.getFinalAutoScalePolicy(
+                        cloudHubRequest.getAutoScalePolicy(),policyJsonArray));
+
                 cloudhubResponseBody = CloudHubRequestUtils.updateAutoScalePolicy(cloudHubRequest);
+            }else{
+                cloudhubResponseBody = CloudHubRequestUtils.createAutoScalePolicy(cloudHubRequest);
             }
 
             DeployHelper.logOutputStandard(logger,cloudhubResponseBody);

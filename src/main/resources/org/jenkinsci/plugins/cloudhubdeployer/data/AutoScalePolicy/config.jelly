@@ -1,0 +1,30 @@
+<?jelly escape-by-default='true'?>
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
+    <f:entry field="autoScalePolicyName" title="${%Policy Name}">
+        <f:textbox/>
+    </f:entry>
+    <f:entry field="scaleBasedOn" title="${%Scale Based On}">
+        <f:textbox/>
+    </f:entry>
+    <f:entry field="scaleUpValue" title="${%Scale Up Threshold Value %}">
+        <f:textbox/>
+    </f:entry>
+    <f:entry field="scaleUpPeriodCount" title="${%Scale Up Threshold Value Duration}">
+        <f:textbox/>
+    </f:entry>
+    <f:entry field="scaleDownValue" title="${%Scale Down Threshold Value %}">
+        <f:textbox/>
+    </f:entry>
+    <f:entry field="scaleDownPeriodCount" title="${%Scale Down Threshold Value Duration}">
+        <f:textbox/>
+    </f:entry>
+    <f:entry field="scaleType" title="${%Modify}">
+        <f:textbox/>
+    </f:entry>
+    <f:entry field="maxScale" title="${%max Scale To}">
+        <f:textbox/>
+    </f:entry>
+    <f:entry field="minScale" title="${%Min Scale To}">
+        <f:textbox/>
+    </f:entry>
+</j:jelly>

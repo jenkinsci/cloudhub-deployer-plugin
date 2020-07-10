@@ -7,8 +7,10 @@ import org.jenkinsci.plugins.cloudhubdeployer.common.RequestMode;
 import org.jenkinsci.plugins.cloudhubdeployer.data.AppInfoJson;
 import lombok.Getter;
 import lombok.Setter;
+import org.jenkinsci.plugins.cloudhubdeployer.data.AutoScalePolicy;
 
 import java.io.PrintStream;
+import java.util.List;
 
 /**
  * CloudHub Request Type
@@ -66,6 +68,12 @@ public class CloudHubRequest {
     @Setter
     @Getter
     private StandardCredentials cloudhubCredentials;
+    @Setter
+    @Getter
+    private boolean autoScalePolicyEnabled;
+    @Setter
+    @Getter
+    private List<AutoScalePolicy> autoScalePolicy;
 
     @Override
     public String toString() {

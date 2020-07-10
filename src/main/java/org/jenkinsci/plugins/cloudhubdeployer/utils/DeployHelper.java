@@ -1,11 +1,16 @@
 package org.jenkinsci.plugins.cloudhubdeployer.utils;
 
 import com.google.common.base.Strings;
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
 import org.jenkinsci.plugins.cloudhubdeployer.CloudHubDeployer;
+import org.jenkinsci.plugins.cloudhubdeployer.CloudHubRequest;
+import org.jenkinsci.plugins.cloudhubdeployer.common.ApiStatus;
 import org.jenkinsci.plugins.cloudhubdeployer.common.RequestMode;
 import org.jenkinsci.plugins.cloudhubdeployer.exception.CloudHubRequestException;
 import hudson.FilePath;
 import org.jenkinsci.plugins.cloudhubdeployer.data.*;
+import org.jenkinsci.plugins.cloudhubdeployer.exception.ValidationException;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -18,7 +23,7 @@ import java.util.Map;
 
 public final class DeployHelper {
 
-    public static AppInfoJson buildAppInfoJson(CloudHubDeployer cloudhubDeployer) throws CloudHubRequestException {
+    public static AppInfoJson buildAppInfoJson(CloudHubDeployer cloudhubDeployer) throws ValidationException {
 
         validate(cloudhubDeployer);
 
@@ -64,38 +69,38 @@ public final class DeployHelper {
         return appInfoJson;
     }
 
-    private static void validate(CloudHubDeployer cloudhubDeployer) throws CloudHubRequestException {
+    private static void validate(CloudHubDeployer cloudhubDeployer) throws ValidationException {
 
             if(Strings.isNullOrEmpty(cloudhubDeployer.getWorkerCpu())){
-                throw new CloudHubRequestException("Please enter Worker Cpu");
+                throw new ValidationException("Please enter Worker Cpu");
             }
 
             if(Strings.isNullOrEmpty(cloudhubDeployer.getWorkerMemory())){
-                throw new CloudHubRequestException("Please enter Worker Memory");
+                throw new ValidationException("Please enter Worker Memory");
             }
 
             if(Strings.isNullOrEmpty(cloudhubDeployer.getWorkerType())){
-                throw new CloudHubRequestException("Please enter Worker Type");
+                throw new ValidationException("Please enter Worker Type");
             }
 
             if(Strings.isNullOrEmpty(cloudhubDeployer.getWorkerWeight())){
-                throw new CloudHubRequestException("Please enter Worker Weight");
+                throw new ValidationException("Please enter Worker Weight");
             }
 
             if(cloudhubDeployer.getWorkerAmount() == 0){
-                throw new CloudHubRequestException("Worker Amount can not be zero");
+                throw new ValidationException("Worker Amount can not be zero");
             }
 
             if(Strings.isNullOrEmpty(cloudhubDeployer.getAppName())){
-                throw new CloudHubRequestException("Please enter Application Name");
+                throw new ValidationException("Please enter Application Name");
             }
 
             if(Strings.isNullOrEmpty(cloudhubDeployer.getMuleVersion())){
-                throw new CloudHubRequestException("Please enter Mule Version");
+                throw new ValidationException("Please enter Mule Version");
             }
 
             if(Strings.isNullOrEmpty(cloudhubDeployer.getRegion())){
-                throw new CloudHubRequestException("Please enter Region");
+                throw new ValidationException("Please enter Region");
             }
 
     }
@@ -109,11 +114,11 @@ public final class DeployHelper {
         return finalCpuCapacity;
     }
 
-    private static String formatWorkerMemory(String memoryCapacity) throws CloudHubRequestException {
+    private static String formatWorkerMemory(String memoryCapacity) throws ValidationException {
         String finalMemoryCapacity;
         if (!(memoryCapacity.contains(" MB") ||
                 memoryCapacity.contains(" GB"))) {
-            throw new CloudHubRequestException("Invalid Worker Memory format");
+            throw new ValidationException("Invalid Worker Memory format");
         }
 
         finalMemoryCapacity = memoryCapacity.concat(Constants.SUFFIX_WORKER_MEMORY);
@@ -167,4 +172,85 @@ public final class DeployHelper {
         logger.println();
     }
 
+    public static RequestMode getFinalRequestMode(CloudHubRequest cloudHubRequest) throws CloudHubRequestException {
+        if(cloudHubRequest.getRequestMode().compareTo(RequestMode.CREATE_OR_UPDATE) == 0){
+            String cloudhubResponseBody = CloudHubRequestUtils.apiList(cloudHubRequest);
+
+            boolean isApiPresent = JsonHelper.checkIfApiExists(cloudhubResponseBody,cloudHubRequest.getApiDomainName());
+
+            if(isApiPresent){
+                return  RequestMode.UPDATE;
+            }else {
+                return RequestMode.CREATE;
+            }
+        }
+
+        return cloudHubRequest.getRequestMode();
+    }
+
+    public static boolean checkIfApiStarted(CloudHubRequest cloudHubRequest, PrintStream logger, int verifyIntervalInSeconds)
+            throws CloudHubRequestException, InterruptedException {
+
+        boolean isDeploymentInProgress = true;
+        boolean isApiStarted = false;
+
+        Thread.sleep(Constants.DEFAULT_VERIFY_INITIAL_DELAY);
+        if(cloudHubRequest.getRequestMode().equals(RequestMode.CREATE)){
+            while (isDeploymentInProgress) {
+                String apiStatus = CloudHubRequestUtils.apiStatus(cloudHubRequest);
+                String status = new Gson().fromJson(apiStatus, JsonObject.class)
+                        .get(Constants.LABEL_API_STATUS).getAsString();
+                if(status.equals(ApiStatus.STARTED.toString())){
+                    isDeploymentInProgress = false;
+                    isApiStarted = true;
+                    logger.println("API deployment is completed");
+                }else if(status.equals(ApiStatus.DEPLOYING.toString())){
+                    logger.println("API deployment is in progress");
+                    Thread.sleep(verifyIntervalInSeconds);
+                }else {
+                    logger.println("Deployment failed. Please review the logs");
+                }
+
+            }
+        }else {
+            while (isDeploymentInProgress) {
+                String apiStatus = CloudHubRequestUtils.apiStatus(cloudHubRequest);
+                if (JsonHelper.checkIfKeyExists(apiStatus, Constants.LABEL_DEPLOYMENT_UPDATE_STATUS)) {
+                    String deploymentUpdateStatus = new Gson().fromJson(apiStatus, JsonObject.class)
+                            .get(Constants.LABEL_DEPLOYMENT_UPDATE_STATUS).getAsString();
+                    logger.println("API update is in progress");
+                    Thread.sleep(verifyIntervalInSeconds);
+                }else {
+                    String status = new Gson().fromJson(apiStatus, JsonObject.class)
+                            .get(Constants.LABEL_API_STATUS).getAsString();
+                    if(status.equals(ApiStatus.STARTED.toString())){
+                        isApiStarted = true;
+                        logger.println("API update is completed");
+                    }else {
+                        logger.println("Update failed. Please review the logs");
+                    }
+                    isDeploymentInProgress = false;
+                }
+
+            }
+        }
+
+        return isApiStarted;
+    }
+
+    public static void validateAutoScalePolicy(List<AutoScalePolicy> policy) throws ValidationException {
+
+        AutoScalePolicy autoScalePolicy = policy.get(0);
+
+        if(Strings.isNullOrEmpty(autoScalePolicy.getAutoScalePolicyName())){
+            throw new ValidationException("Please enter AutoScale Policy Name");
+        }
+    }
+
+    public static boolean checkIfAutoScalePolicyExists(CloudHubRequest cloudHubRequest, PrintStream logger) throws CloudHubRequestException {
+        String cloudhubResponseBody = CloudHubRequestUtils.getAutoScalePolicy(cloudHubRequest);
+
+        logger.println(cloudhubResponseBody);
+        return false;
+    }
 }

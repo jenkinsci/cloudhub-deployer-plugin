@@ -1,12 +1,18 @@
 package org.jenkinsci.plugins.cloudhubdeployer;
 
 import com.cloudbees.plugins.credentials.common.StandardCredentials;
+import hudson.FilePath;
 import org.jenkinsci.plugins.cloudhubdeployer.common.DebugMode;
 import org.jenkinsci.plugins.cloudhubdeployer.common.RequestMode;
 import org.jenkinsci.plugins.cloudhubdeployer.data.AppInfoJson;
+import org.jenkinsci.plugins.cloudhubdeployer.data.AutoScalePolicy;
+import org.jenkinsci.plugins.cloudhubdeployer.exception.CloudHubRequestException;
 import org.jenkinsci.plugins.cloudhubdeployer.exception.ValidationException;
+import org.jenkinsci.plugins.cloudhubdeployer.utils.DeployHelper;
 
+import java.io.IOException;
 import java.io.PrintStream;
+import java.util.List;
 
 /**
  * Factory to create <code>Cloudhub Request</code> objects
@@ -86,8 +92,29 @@ public class CloudHubRequestFactory {
         return this;
     }
 
-    public CloudHubRequestFactory withFilePath(final String filePath) {
-        cloudHubRequest.setFilePath(filePath);
+    public CloudHubRequestFactory withAutoScalepolicy(Boolean enableAutoScalePolicy, List<AutoScalePolicy> autoScalePolicy) {
+        cloudHubRequest.setAutoScalePolicyEnabled(enableAutoScalePolicy);
+        cloudHubRequest.setAutoScalePolicy(autoScalePolicy);
+        return this;
+    }
+
+    public CloudHubRequestFactory withFilePath(FilePath workspace, final String filePath) {
+        FilePath[] filePaths;
+        try {
+
+            if(null == filePath)
+                return null;
+
+            filePaths = workspace.list(filePath);
+
+            if(filePaths.length > 0){
+                cloudHubRequest.setFilePath(filePaths[0].getRemote());
+            }
+
+        } catch (IOException | InterruptedException e) {
+            e.printStackTrace();
+        }
+
         return this;
     }
 
@@ -139,6 +166,11 @@ public class CloudHubRequestFactory {
             throw new ValidationException("Invalid request mode");
         }
 
+        if(this.cloudHubRequest.isAutoScalePolicyEnabled()){
+            DeployHelper.validateAutoScalePolicy(this.cloudHubRequest.getAutoScalePolicy());
+        }
+
         return true;
     }
+
 }

@@ -57,7 +57,7 @@ public final class Constants {
     public static final boolean DEFAULT_OBJECT_STORE_V1 = false;
     public static final boolean DEFAULT_VERIFY_DEPLOYMENTS = true;
     public static final boolean DEFAULT_IGNORE_GLOBAL_SETTINGS = false;
-
+    public static final Boolean DEFAULT_AUTOSCALE_POLICY = false;
 
 
     private Constants() {

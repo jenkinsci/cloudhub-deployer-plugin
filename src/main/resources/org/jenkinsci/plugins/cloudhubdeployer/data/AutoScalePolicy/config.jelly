@@ -6,25 +6,45 @@
     <f:entry field="scaleBasedOn" title="${%Scale Based On}">
         <f:textbox/>
     </f:entry>
-    <f:entry field="scaleUpValue" title="${%Scale Up Threshold Value %}">
+
+    <f:entry field="scaleType" title="${%Scale Type}">
         <f:textbox/>
     </f:entry>
-    <f:entry field="scaleUpPeriodCount" title="${%Scale Up Threshold Value Duration}">
-        <f:textbox/>
-    </f:entry>
-    <f:entry field="scaleDownValue" title="${%Scale Down Threshold Value %}">
-        <f:textbox/>
-    </f:entry>
-    <f:entry field="scaleDownPeriodCount" title="${%Scale Down Threshold Value Duration}">
-        <f:textbox/>
-    </f:entry>
-    <f:entry field="scaleType" title="${%Modify}">
-        <f:textbox/>
-    </f:entry>
-    <f:entry field="maxScale" title="${%max Scale To}">
-        <f:textbox/>
-    </f:entry>
+
     <f:entry field="minScale" title="${%Min Scale To}">
-        <f:textbox/>
+        <f:number default="1"/>
     </f:entry>
+
+    <f:entry field="maxScale" title="${%max Scale To}">
+        <f:number default="2"/>
+    </f:entry>
+
+    <f:section title="Scale Up Policy">
+
+    <f:entry field="scaleUpValue" title="${%Threshold Value }(%)">
+        <f:number default="80"/>
+    </f:entry>
+    <f:entry field="scaleUpPeriodCount" title="${%Threshold Value Duration For More Then }(Minutes)">
+        <f:number default="5"/>
+    </f:entry>
+    <f:entry field="scaleUpNextScaleWaitMins" title="${%No Other Policy Will Take Effect For }(Minutes)">
+        <f:number default="20"/>
+    </f:entry>
+
+    </f:section>
+
+    <f:section title="Scale Down Policy">
+
+    <f:entry field="scaleDownValue" title="${%Threshold Value }(%)">
+        <f:number default="50"/>
+    </f:entry>
+    <f:entry field="scaleDownPeriodCount" title="${%Threshold Value Duration For More Then }(Minutes)">
+        <f:number default="5" />
+    </f:entry>
+    <f:entry field="scaleDownNextScaleWaitMins" title="${%No Other Policy Will Take Effect For }(Minutes)">
+        <f:number default="20"/>
+    </f:entry>
+
+    </f:section>
+
 </j:jelly>

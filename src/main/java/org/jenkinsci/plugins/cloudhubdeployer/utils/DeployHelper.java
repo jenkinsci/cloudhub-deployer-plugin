@@ -241,10 +241,62 @@ public final class DeployHelper {
 
     public static void validateAutoScalePolicy(List<AutoScalePolicy> policy) throws ValidationException {
 
-        AutoScalePolicy autoScalePolicy = policy.get(Constants.DRAFULT_POLICY_INDEX);
+        AutoScalePolicy autoScalePolicy = policy.get(Constants.DEFALT_POLICY_INDEX);
 
         if(Strings.isNullOrEmpty(autoScalePolicy.getAutoScalePolicyName())){
             throw new ValidationException("Please enter AutoScale Policy Name");
+        }
+
+        if(Strings.isNullOrEmpty(autoScalePolicy.getScaleBasedOn())){
+            throw new ValidationException("Please enter Scale Based On");
+        }
+
+        if(!(autoScalePolicy.getScaleBasedOn().equals("CPU") ||
+                autoScalePolicy.getScaleBasedOn().equals("MEMORY"))){
+            throw new ValidationException("Value entered for scale based on is incorrect. " +
+                    "Please enter either CPU or MEMORY");
+        }
+
+        if(Strings.isNullOrEmpty(autoScalePolicy.getScaleType())){
+            throw new ValidationException("Please enter scale type");
+        }
+
+        if(!(autoScalePolicy.getScaleType().equals("WORKER_COUNT") ||
+                autoScalePolicy.getScaleType().equals("WORKER_SIZE"))){
+            throw new ValidationException("Value entered for scale type is incorrect. " +
+                    "Please enter either WORKER_COUNT or WORKER_SIZE");
+        }
+
+        if(autoScalePolicy.getMaxScale() < 0){
+            throw new ValidationException("Please enter max scale to");
+        }
+
+        if(autoScalePolicy.getMinScale() < 0){
+            throw new ValidationException("Please enter mix scale to");
+        }
+
+        if(autoScalePolicy.getScaleUpValue() < 0){
+            throw new ValidationException("Please enter threshold value for scale up policy");
+        }
+
+        if(autoScalePolicy.getScaleDownValue() < 0){
+            throw new ValidationException("Please enter threshold value for scale down policy");
+        }
+
+        if(autoScalePolicy.getScaleUpNextScaleWaitMins() < 0){
+            throw new ValidationException("Please enter no other policy will take effect for scale up policy");
+        }
+
+        if(autoScalePolicy.getScaleDownNextScaleWaitMins() < 0){
+            throw new ValidationException("Please enter no other policy will take effect for scale down policy");
+        }
+
+        if(autoScalePolicy.getScaleUpPeriodCount() < 0){
+            throw new ValidationException("Please enter threshold value duration for scale up policy");
+        }
+
+        if(autoScalePolicy.getScaleDownPeriodCount() < 0){
+            throw new ValidationException("Please enter threshold value duration for scale down policy");
         }
     }
 
@@ -257,7 +309,7 @@ public final class DeployHelper {
 
     public static List<AutoScalePolicy> getFinalAutoScalePolicy(List<AutoScalePolicy> policyList, JsonArray policyJsonArray) {
 
-        int defaultIndex = Constants.DRAFULT_POLICY_INDEX;
+        int defaultIndex = Constants.DEFALT_POLICY_INDEX;
 
         JsonObject jsonObject = policyJsonArray.get(defaultIndex).getAsJsonObject();
 
@@ -269,5 +321,28 @@ public final class DeployHelper {
         policyList.set(defaultIndex,autoScalePolicy);
 
         return policyList;
+    }
+
+    public static List<AutoScalePolicy> formatAutoScalePolicy(List<AutoScalePolicy> autoScalePolicyList) {
+
+        Scale scaleUp = new Scale();
+        Scale scaleDown = new Scale();
+
+        AutoScalePolicy autoScalePolicy = autoScalePolicyList.get(Constants.DEFALT_POLICY_INDEX);
+
+        scaleUp.setPeriodCount(autoScalePolicy.getScaleDownPeriodCount());
+        scaleUp.setPeriodMins(1);
+        scaleUp.setValue(autoScalePolicy.getScaleUpValue());
+
+        scaleDown.setPeriodCount(autoScalePolicy.getScaleDownPeriodCount());
+        scaleDown.setPeriodMins(1);
+        scaleDown.setValue(autoScalePolicy.getScaleDownValue());
+
+        autoScalePolicy.setScaleUp(scaleUp);
+        autoScalePolicy.setScaleDown(scaleDown);
+
+        autoScalePolicyList.set(Constants.DEFALT_POLICY_INDEX,autoScalePolicy);
+
+        return autoScalePolicyList;
     }
 }

@@ -59,7 +59,7 @@ public final class Constants {
     public static final boolean DEFAULT_IGNORE_GLOBAL_SETTINGS = false;
     public static final Boolean DEFAULT_AUTOSCALE_POLICY = false;
     public static final String JSON_KEY_AUTOSCALE_POLICY_ID = "id";
-    public static final int DRAFULT_POLICY_INDEX = 0;
+    public static final int DEFALT_POLICY_INDEX = 0;
 
 
     private Constants() {

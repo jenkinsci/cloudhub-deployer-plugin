@@ -51,17 +51,18 @@ public class AutoScalePolicy extends AbstractDescribableImpl<AutoScalePolicy> {
 
     @SerializedName("metric")
     @Expose @Setter @Getter
+    @DataBoundSetter
     private String scaleBasedOn;
 
     @SerializedName("scaleUpNextScaleWaitMins")
     @Expose @Setter @Getter
     @DataBoundSetter
-    private Integer scaleUpPeriodCount;
+    private Integer scaleUpNextScaleWaitMins;
 
     @SerializedName("scaleDownNextScaleWaitMins")
     @Expose @Setter @Getter
     @DataBoundSetter
-    private Integer scaleDownPeriodCount;
+    private Integer scaleDownNextScaleWaitMins;
 
     @SerializedName("scaleUp")
     @Expose @Setter @Getter
@@ -73,17 +74,50 @@ public class AutoScalePolicy extends AbstractDescribableImpl<AutoScalePolicy> {
     @DataBoundSetter
     private Scale scaleDown;
 
+    @Expose(serialize = false, deserialize = false)
+    @Setter @Getter
+    @DataBoundSetter
+    private Integer scaleUpValue;
+
+    @Expose(serialize = false, deserialize = false)
+    @Setter @Getter
+    @DataBoundSetter
+    private Integer scaleUpPeriodCount;
+
+    @Expose(serialize = false, deserialize = false)
+    @Setter @Getter
+    @DataBoundSetter
+    private Integer scaleDownValue;
+
+    @Expose(serialize = false, deserialize = false)
+    @Setter @Getter
+    @DataBoundSetter
+    private Integer scaleDownPeriodCount;
+
+
     @DataBoundConstructor
     public AutoScalePolicy() {
     }
 
-    @DataBoundSetter
-    public void setScaleBasedOn(String scaleBasedOn) {
-        this.scaleBasedOn = scaleBasedOn;
-    }
-
     public Descriptor<AutoScalePolicy> getDescriptor() {
         return Jenkins.getInstance().getDescriptorOrDie(getClass());
+    }
+
+    @Override
+    public String toString() {
+        return "AutoScalePolicy{" +
+                "id='" + id + '\'' +
+                ", enableAutoScalePolicy=" + enableAutoScalePolicy +
+                ", maxScale=" + maxScale +
+                ", minScale=" + minScale +
+                ", scaleType='" + scaleType + '\'' +
+                ", autoScalePolicyName='" + autoScalePolicyName + '\'' +
+                ", scaleBasedOn='" + scaleBasedOn + '\'' +
+                ", scaleUpNextScaleWaitMins=" + scaleUpNextScaleWaitMins +
+                ", scaleDownNextScaleWaitMins=" + scaleDownNextScaleWaitMins +
+                ", scaleUp=" + scaleUp +
+                ", scaleDown=" + scaleDown +
+                '}';
     }
 
     @Symbol("AutoScalePolicy")
@@ -91,6 +125,15 @@ public class AutoScalePolicy extends AbstractDescribableImpl<AutoScalePolicy> {
     public static class DescriptorImpl extends Descriptor<AutoScalePolicy> {
 
         public String getDisplayName() { return ""; }
+
+        public FormValidation doCheckAutoScalePolicyName(@QueryParameter final String autoScalePolicyName) {
+
+            if (Strings.isNullOrEmpty(autoScalePolicyName)) {
+                return FormValidation.error("Please fill in field");
+            }
+
+            return FormValidation.ok();
+        }
 
         public FormValidation doCheckScaleBasedOn(@QueryParameter final String scaleBasedOn) {
 
@@ -101,6 +144,86 @@ public class AutoScalePolicy extends AbstractDescribableImpl<AutoScalePolicy> {
             return FormValidation.ok();
         }
 
+        public FormValidation doCheckScaleType(@QueryParameter final String scaleType) {
+
+            if (Strings.isNullOrEmpty(scaleType)) {
+                return FormValidation.error("Please fill in field");
+            }
+
+            return FormValidation.ok();
+        }
+
+        public FormValidation doCheckMinScale(@QueryParameter final int minScale) {
+
+            if (minScale <= 0) {
+                return FormValidation.error("Please fill in field");
+            }
+
+            return FormValidation.ok();
+        }
+
+        public FormValidation doCheckMaxScale(@QueryParameter final int maxScale) {
+
+            if (maxScale <= 0) {
+                return FormValidation.error("Please fill in field");
+            }
+
+            return FormValidation.ok();
+        }
+
+        public FormValidation doCheckScaleUpValue(@QueryParameter final int scaleUpValue) {
+
+            if (scaleUpValue <= 0) {
+                return FormValidation.error("Please fill in field");
+            }
+
+            return FormValidation.ok();
+        }
+
+        public FormValidation doCheckScaleUpPeriodCount(@QueryParameter final int scaleUpPeriodCount) {
+
+            if (scaleUpPeriodCount <= 0) {
+                return FormValidation.error("Please fill in field");
+            }
+
+            return FormValidation.ok();
+        }
+
+        public FormValidation doCheckScaleUpNextScaleWaitMins(@QueryParameter final int scaleUpNextScaleWaitMins) {
+
+            if (scaleUpNextScaleWaitMins <= 0) {
+                return FormValidation.error("Please fill in field");
+            }
+
+            return FormValidation.ok();
+        }
+
+        public FormValidation doCheckScaleDownValue(@QueryParameter final int scaleDownValue) {
+
+            if (scaleDownValue <= 0) {
+                return FormValidation.error("Please fill in field");
+            }
+
+            return FormValidation.ok();
+        }
+
+        public FormValidation doCheckScaleDownPeriodCount(@QueryParameter final int scaleDownPeriodCount) {
+
+            if (scaleDownPeriodCount <= 0) {
+                return FormValidation.error("Please fill in field");
+            }
+
+            return FormValidation.ok();
+        }
+
+        public FormValidation doCheckScaleDownNextScaleWaitMins(@QueryParameter final int scaleDownNextScaleWaitMins) {
+
+            if (scaleDownNextScaleWaitMins <= 0) {
+                return FormValidation.error("Please fill in field");
+            }
+
+            return FormValidation.ok();
+        }
 
     }
 

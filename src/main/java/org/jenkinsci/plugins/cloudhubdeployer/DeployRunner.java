@@ -2,6 +2,8 @@ package org.jenkinsci.plugins.cloudhubdeployer;
 
 import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.common.StandardCredentials;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
 import org.jenkinsci.plugins.cloudhubdeployer.common.RequestMode;
 import org.jenkinsci.plugins.cloudhubdeployer.exception.CloudHubRequestException;
@@ -69,6 +71,7 @@ public class DeployRunner {
             cloudHubRequest.setAppInfoJson(appInfoJson);
         }
 
+
         loginResponseRaw = CloudHubRequestUtils.login(cloudHubRequest);
 
         if(!JsonHelper.checkIfKeyExists(loginResponseRaw,Constants.JSON_KEY_ACCESS_TOKEN))
@@ -119,6 +122,16 @@ public class DeployRunner {
         if(cloudHubRequest.isAutoScalePolicyEnabled()){
 
             JsonArray policyJsonArray = DeployHelper.checkIfAutoScalePolicyExists(cloudHubRequest,logger);
+
+            cloudHubRequest.setAutoScalePolicy(DeployHelper.formatAutoScalePolicy(
+                    cloudHubRequest.getAutoScalePolicy()));
+
+            Gson gson = new GsonBuilder()
+                    .excludeFieldsWithoutExposeAnnotation()
+                    .create();
+
+            logger.println(gson.toJson(
+                    cloudHubRequest.getAutoScalePolicy().get(Constants.DEFALT_POLICY_INDEX)));
 
             if(policyJsonArray.size() > 0){
 

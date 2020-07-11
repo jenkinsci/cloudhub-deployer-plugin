@@ -1,6 +1,7 @@
 package org.jenkinsci.plugins.cloudhubdeployer.utils;
 
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import org.jenkinsci.plugins.cloudhubdeployer.CloudHubRequest;
 import org.jenkinsci.plugins.cloudhubdeployer.common.DebugMode;
 import org.jenkinsci.plugins.cloudhubdeployer.exception.CloudHubRequestException;
@@ -23,7 +24,7 @@ import java.io.IOException;
 import java.io.PrintStream;
 
 /**
- * Utility class for HTTP requests to Hashicorp Consul REST API.
+ * Utility class for HTTP requests to CloudHub REST API.
  *
  * @author Vikas Chaudhary
  * @version 1.0.0
@@ -302,9 +303,11 @@ public final class CloudHubRequestUtils {
 
         String responseBody = null;
 
+        Gson gson = new GsonBuilder().excludeFieldsWithoutExposeAnnotation().create();
+
         try {
 
-            httpPost.setEntity(new StringEntity(new Gson().toJson(cloudhubRequest.getAutoScalePolicy().get(0))));
+            httpPost.setEntity(new StringEntity(gson.toJson(cloudhubRequest.getAutoScalePolicy().get(0))));
 
             ResponseHandler<String> responseHandler = CloudHubRequestUtils.getResponseHandler(cloudhubRequest
                     .getDebugMode(), cloudhubRequest.getLogger());
@@ -361,11 +364,13 @@ public final class CloudHubRequestUtils {
 
         String responseBody = null;
 
+        Gson gson = new GsonBuilder().excludeFieldsWithoutExposeAnnotation().create();
+
         try {
 
 
-            httpPut.setEntity(new StringEntity(new Gson().toJson(
-                    cloudhubRequest.getAutoScalePolicy().get(Constants.DRAFULT_POLICY_INDEX))));
+            httpPut.setEntity(new StringEntity(gson.toJson(
+                    cloudhubRequest.getAutoScalePolicy().get(Constants.DEFALT_POLICY_INDEX))));
 
             ResponseHandler<String> responseHandler = CloudHubRequestUtils.getResponseHandler(cloudhubRequest
                     .getDebugMode(), cloudhubRequest.getLogger());

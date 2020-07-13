@@ -429,7 +429,7 @@ public class CloudHubDeployer extends Builder implements SimpleBuildStep {
                     throw new CloudHubRequestException("Global settings org Id was not found.");
                 }
                 if (Strings.isNullOrEmpty(this.environmentId)) {
-                    throw new CloudHubRequestException("Global settings environment Id was not found.");
+                    throw new CloudHubRequestException("Global settings environment Id/Name was not found.");
                 }
                 if (Strings.isNullOrEmpty(this.credentialsId)) {
                     throw new CloudHubRequestException("Global settings credentials Id was not found.");

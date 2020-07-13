@@ -8,7 +8,7 @@
             <f:textbox />
         </f:entry>
 
-        <f:entry title="Environment ID Or Name" field="environmentId" name="environmentId">
+        <f:entry title="Environment ID or Name" field="environmentId" name="environmentId">
             <f:textbox />
         </f:entry>
 

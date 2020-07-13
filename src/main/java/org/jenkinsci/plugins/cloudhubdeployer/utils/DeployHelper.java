@@ -348,7 +348,7 @@ public final class DeployHelper {
         return autoScalePolicyList;
     }
 
-    public static String verifyOrGetEnvId(String response, String envIdOrName) {
+    public static String verifyOrGetEnvId(String response, String envIdOrName) throws CloudHubRequestException {
         return JsonHelper.verifyOrGetEnvId(response,envIdOrName);
     }
 }

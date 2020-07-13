@@ -4,7 +4,7 @@
 	<f:optionalBlock title="Use global settings" inline="true" field="ignoreGlobalSettings" negative="true"
 	            checked="${instance==null?true:!instance.ignoreGlobalSettings}">
 
-        <f:entry title="Organization ID Or Business Group Id" field="orgId" name="orgId">
+        <f:entry title="Organization ID or Business Group Id" field="orgId" name="orgId">
             <f:textbox />
         </f:entry>
 

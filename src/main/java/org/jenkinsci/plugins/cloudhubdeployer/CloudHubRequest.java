@@ -25,6 +25,9 @@ public class CloudHubRequest {
     private String apiDomainName;
     @Setter
     @Getter
+    private String orgId;
+    @Setter
+    @Getter
     private String envId;
     @Setter
     @Getter
@@ -100,4 +103,5 @@ public class CloudHubRequest {
         return "{\"username\" : \""+ passwordCredentials.getUsername() +"\" , " +
                 "\"password\" : \""+passwordCredentials.getPassword()+"\" }";
     }
+
 }

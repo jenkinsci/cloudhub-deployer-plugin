@@ -32,4 +32,26 @@ public final class JsonHelper {
     private JsonHelper() {
         // hide constructor
     }
+
+    public static JsonArray getenvList(String response) {
+        return new Gson().fromJson(response, JsonObject.class).get("data").getAsJsonArray();
+    }
+
+    public static String verifyOrGetEnvId(String response, String envIdOrName) {
+        JsonArray data = getenvList(response);
+
+        for (JsonElement jsonElement : data) {
+            JsonObject jsonObject = jsonElement.getAsJsonObject();
+
+            String id = jsonObject.get("id").getAsString().toLowerCase();
+            String name = jsonObject.get("name").getAsString().toLowerCase();
+
+            if(id.equals(envIdOrName.toLowerCase()) || name.equals(envIdOrName.toLowerCase())){
+                return id;
+            }
+
+        }
+
+        return null;
+    }
 }

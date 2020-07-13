@@ -60,9 +60,36 @@ public final class CloudHubRequestUtils {
         return responseBody;
     }
 
+    public static String envList(final CloudHubRequest cloudhubRequest) throws CloudHubRequestException {
+
+        HttpGet httpGet = new HttpGet(Constants.CLOUDHUB_URL + "/accounts/api/organizations/"
+                + cloudhubRequest.getOrgId() + "/environments" );
+
+        CloseableHttpClient httpclient = HttpClients.createDefault();
+
+        httpGet.addHeader(Constants.LABEL_AUTHORIZATION,"Bearer " + cloudhubRequest.getAccessToken());
+
+        String responseBody = null;
+
+        try {
+
+            ResponseHandler<String> responseHandler = CloudHubRequestUtils.getResponseHandler(cloudhubRequest
+                    .getDebugMode(), cloudhubRequest.getLogger());
+
+            responseBody = httpclient.execute(httpGet, responseHandler);
+
+        } catch (IOException ioe) {
+            cloudhubRequest.getLogger().println(ExceptionUtils.getFullStackTrace(ioe));
+            throw new CloudHubRequestException("CloudHub environment verification under given organization failed.");
+        } finally {
+            CloudHubRequestUtils.closeHttpClient(httpclient, cloudhubRequest);
+        }
+        return responseBody;
+    }
+
     public static String create(final CloudHubRequest cloudhubRequest) throws CloudHubRequestException {
 
-        HttpPost httpPost = new HttpPost(Constants.CLOUDHUB_URL + Constants.API_URI + Constants.URI_APPLICATION);
+        HttpPost httpPost = new HttpPost(Constants.CLOUDHUB_URL + Constants.API_URI_V2 + Constants.URI_APPLICATION);
 
         CloseableHttpClient httpclient = HttpClients.createDefault();
 
@@ -101,7 +128,7 @@ public final class CloudHubRequestUtils {
 
     public static String update(final CloudHubRequest cloudhubRequest) throws CloudHubRequestException {
 
-        HttpPut httpPut = new HttpPut(Constants.CLOUDHUB_URL + Constants.API_URI + Constants.URI_APPLICATION
+        HttpPut httpPut = new HttpPut(Constants.CLOUDHUB_URL + Constants.API_URI_V2 + Constants.URI_APPLICATION
                         + "/" + cloudhubRequest.getApiDomainName());
 
         CloseableHttpClient httpclient = HttpClients.createDefault();
@@ -141,7 +168,7 @@ public final class CloudHubRequestUtils {
 
     public static String updateFile(final CloudHubRequest cloudhubRequest) throws CloudHubRequestException {
 
-        HttpPost httpPost = new HttpPost(Constants.CLOUDHUB_URL + Constants.API_URI + Constants.URI_APPLICATION
+        HttpPost httpPost = new HttpPost(Constants.CLOUDHUB_URL + Constants.API_URI_V2 + Constants.URI_APPLICATION
                     + "/" + cloudhubRequest.getApiDomainName() + "/files");
 
         CloseableHttpClient httpclient = HttpClients.createDefault();
@@ -177,7 +204,7 @@ public final class CloudHubRequestUtils {
 
     public static String delete(final CloudHubRequest cloudhubRequest) throws CloudHubRequestException {
 
-        HttpDelete httpDelete = new HttpDelete(Constants.CLOUDHUB_URL + Constants.API_URI +
+        HttpDelete httpDelete = new HttpDelete(Constants.CLOUDHUB_URL + Constants.API_URI_V2 +
                 Constants.URI_APPLICATION + "/" + cloudhubRequest.getApiDomainName());
 
         CloseableHttpClient httpclient = HttpClients.createDefault();
@@ -236,7 +263,7 @@ public final class CloudHubRequestUtils {
 
     public static String apiStatus(final CloudHubRequest cloudhubRequest) throws CloudHubRequestException {
 
-        HttpGet httpGet = new HttpGet(Constants.CLOUDHUB_URL + Constants.API_URI + Constants.URI_APPLICATION
+        HttpGet httpGet = new HttpGet(Constants.CLOUDHUB_URL + Constants.API_URI_V2 + Constants.URI_APPLICATION
                 + "/"+ cloudhubRequest.getApiDomainName());
 
         CloseableHttpClient httpclient = HttpClients.createDefault();
@@ -265,7 +292,7 @@ public final class CloudHubRequestUtils {
 
     public static String apiList(final CloudHubRequest cloudhubRequest) throws CloudHubRequestException {
 
-        HttpGet httpGet = new HttpGet(Constants.CLOUDHUB_URL + Constants.API_URI + Constants.URI_APPLICATION);
+        HttpGet httpGet = new HttpGet(Constants.CLOUDHUB_URL + Constants.API_URI_V2 + Constants.URI_APPLICATION);
 
         CloseableHttpClient httpclient = HttpClients.createDefault();
 
@@ -293,7 +320,7 @@ public final class CloudHubRequestUtils {
 
     public static String createAutoScalePolicy(final CloudHubRequest cloudhubRequest) throws CloudHubRequestException {
 
-        HttpPost httpPost = new HttpPost(Constants.CLOUDHUB_URL + Constants.API_URI + Constants.URI_APPLICATION
+        HttpPost httpPost = new HttpPost(Constants.CLOUDHUB_URL + Constants.API_URI_V2 + Constants.URI_APPLICATION
                 + "/" + cloudhubRequest.getApiDomainName() + "/autoscalepolicies");
 
         CloseableHttpClient httpclient = HttpClients.createDefault();
@@ -325,7 +352,7 @@ public final class CloudHubRequestUtils {
 
     public static String getAutoScalePolicy(final CloudHubRequest cloudhubRequest) throws CloudHubRequestException {
 
-        HttpGet httpPut = new HttpGet(Constants.CLOUDHUB_URL + Constants.API_URI + Constants.URI_APPLICATION
+        HttpGet httpPut = new HttpGet(Constants.CLOUDHUB_URL + Constants.API_URI_V2 + Constants.URI_APPLICATION
                 + "/" + cloudhubRequest.getApiDomainName() + "/autoscalepolicies");
 
         CloseableHttpClient httpclient = HttpClients.createDefault();
@@ -353,7 +380,7 @@ public final class CloudHubRequestUtils {
 
     public static String updateAutoScalePolicy(final CloudHubRequest cloudhubRequest) throws CloudHubRequestException {
 
-        HttpPut httpPut = new HttpPut(Constants.CLOUDHUB_URL + Constants.API_URI + Constants.URI_APPLICATION
+        HttpPut httpPut = new HttpPut(Constants.CLOUDHUB_URL + Constants.API_URI_V2 + Constants.URI_APPLICATION
                 + "/" + cloudhubRequest.getApiDomainName() + "/autoscalepolicies" +
                 cloudhubRequest.getAutoScalePolicy().get(0).getId());
 

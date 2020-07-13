@@ -15,7 +15,7 @@ public final class Constants {
     public static final String LABEL_CONTENT_TYPE = "Content-Type";
     public static final String LABEL_ACCEPT = "Accept";
     public static final String CLOUDHUB_URL = "https://anypoint.mulesoft.com";
-    public static final String API_URI = "/cloudhub/api/v2";
+    public static final String API_URI_V2 = "/cloudhub/api/v2";
     public static final String API_URI_NO_VERSION = "/cloudhub/api";
     public static final String URI_LOGIN = "/accounts/login";
     public static final String URI_APPLICATION = "/applications";

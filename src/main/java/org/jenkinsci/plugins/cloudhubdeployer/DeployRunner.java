@@ -52,6 +52,7 @@ public class DeployRunner {
                 .withCloushubCredentials(StringUtils.isNotBlank(cloudHubDeployer.getCredentialsId()) ?
                         CredentialsProvider.findCredentialById(cloudHubDeployer.getCredentialsId(),
                                 StandardCredentials.class, run) : null)
+                .withOrgId(cloudHubDeployer.getOrgId())
                 .withEnvironmetId(cloudHubDeployer.getEnvironmentId())
                 .withAutoStart(Boolean.toString(cloudHubDeployer.isAutoStart()))
                 .withTimeoutConnect(cloudHubDeployer.getTimeoutConnection())
@@ -80,8 +81,23 @@ public class DeployRunner {
 
         cloudHubRequest.setAccessToken(JsonHelper.parseAccessToken(loginResponseRaw));
 
+        cloudhubResponseBody = null;
+
+        cloudhubResponseBody = CloudHubRequestUtils.envList(cloudHubRequest);
+
+        if(cloudhubResponseBody != null){
+            String envID = DeployHelper.verifyOrGetEnvId(cloudhubResponseBody,cloudHubRequest.getEnvId());
+
+            if(null == envID){
+                throw new CloudHubRequestException("No environment exists with given name or id");
+            }
+
+            cloudHubRequest.setEnvId(envID);
+        }
+
         cloudHubRequest.setRequestMode(DeployHelper.getFinalRequestMode(cloudHubRequest));
 
+        cloudhubResponseBody = null;
 
         switch(cloudHubRequest.getRequestMode()) {
             case CREATE:

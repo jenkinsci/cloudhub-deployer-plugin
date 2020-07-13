@@ -1,8 +1,10 @@
 package org.jenkinsci.plugins.cloudhubdeployer.utils;
 
+import com.google.api.client.json.Json;
 import com.google.common.base.Strings;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import org.jenkinsci.plugins.cloudhubdeployer.CloudHubDeployer;
 import org.jenkinsci.plugins.cloudhubdeployer.CloudHubRequest;
@@ -344,5 +346,9 @@ public final class DeployHelper {
         autoScalePolicyList.set(Constants.DEFALT_POLICY_INDEX,autoScalePolicy);
 
         return autoScalePolicyList;
+    }
+
+    public static String verifyOrGetEnvId(String response, String envIdOrName) {
+        return JsonHelper.verifyOrGetEnvId(response,envIdOrName);
     }
 }

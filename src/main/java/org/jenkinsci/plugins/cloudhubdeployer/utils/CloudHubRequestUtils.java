@@ -323,10 +323,13 @@ public final class CloudHubRequestUtils {
         HttpPost httpPost = new HttpPost(Constants.CLOUDHUB_URL + Constants.API_URI_V2 + Constants.URI_APPLICATION
                 + "/" + cloudhubRequest.getApiDomainName() + "/autoscalepolicies");
 
+
         CloseableHttpClient httpclient = HttpClients.createDefault();
 
         httpPost.addHeader(Constants.LABEL_ANYPNT_ENV_ID,cloudhubRequest.getEnvId());
         httpPost.addHeader(Constants.LABEL_AUTHORIZATION,"Bearer " + cloudhubRequest.getAccessToken());
+        httpPost.addHeader(Constants.LABEL_ACCEPT, Constants.MEDIA_TYPE_APP_JSON);
+        httpPost.addHeader(Constants.LABEL_CONTENT_TYPE, Constants.MEDIA_TYPE_APP_JSON);
 
         String responseBody = null;
 
@@ -343,7 +346,7 @@ public final class CloudHubRequestUtils {
 
         } catch (IOException ioe) {
             cloudhubRequest.getLogger().println(ExceptionUtils.getFullStackTrace(ioe));
-            throw new CloudHubRequestException("Cloudhub create autoscale policy failed.");
+            throw new CloudHubRequestException("Cloudhub create autoscale policy call failed.");
         } finally {
             CloudHubRequestUtils.closeHttpClient(httpclient, cloudhubRequest);
         }
@@ -355,10 +358,12 @@ public final class CloudHubRequestUtils {
         HttpGet httpPut = new HttpGet(Constants.CLOUDHUB_URL + Constants.API_URI_V2 + Constants.URI_APPLICATION
                 + "/" + cloudhubRequest.getApiDomainName() + "/autoscalepolicies");
 
+
         CloseableHttpClient httpclient = HttpClients.createDefault();
 
         httpPut.addHeader(Constants.LABEL_ANYPNT_ENV_ID,cloudhubRequest.getEnvId());
         httpPut.addHeader(Constants.LABEL_AUTHORIZATION,"Bearer " + cloudhubRequest.getAccessToken());
+        httpPut.addHeader(Constants.LABEL_ACCEPT, Constants.MEDIA_TYPE_APP_JSON);
 
         String responseBody = null;
 
@@ -371,7 +376,7 @@ public final class CloudHubRequestUtils {
 
         } catch (IOException ioe) {
             cloudhubRequest.getLogger().println(ExceptionUtils.getFullStackTrace(ioe));
-            throw new CloudHubRequestException("Cloudhub get autoscale Failed.");
+            throw new CloudHubRequestException("Cloudhub get autoscale policies call failed.");
         } finally {
             CloudHubRequestUtils.closeHttpClient(httpclient, cloudhubRequest);
         }
@@ -384,10 +389,13 @@ public final class CloudHubRequestUtils {
                 + "/" + cloudhubRequest.getApiDomainName() + "/autoscalepolicies" +
                 cloudhubRequest.getAutoScalePolicy().get(0).getId());
 
+
         CloseableHttpClient httpclient = HttpClients.createDefault();
 
         httpPut.addHeader(Constants.LABEL_ANYPNT_ENV_ID,cloudhubRequest.getEnvId());
         httpPut.addHeader(Constants.LABEL_AUTHORIZATION,"Bearer " + cloudhubRequest.getAccessToken());
+        httpPut.addHeader(Constants.LABEL_CONTENT_TYPE, Constants.MEDIA_TYPE_APP_JSON);
+        httpPut.addHeader(Constants.LABEL_ACCEPT, Constants.MEDIA_TYPE_APP_JSON);
 
         String responseBody = null;
 
@@ -406,7 +414,7 @@ public final class CloudHubRequestUtils {
 
         } catch (IOException ioe) {
             cloudhubRequest.getLogger().println(ExceptionUtils.getFullStackTrace(ioe));
-            throw new CloudHubRequestException("Cloudhub update App Failed.");
+            throw new CloudHubRequestException("Cloudhub update autoscale policies call Failed.");
         } finally {
             CloudHubRequestUtils.closeHttpClient(httpclient, cloudhubRequest);
         }

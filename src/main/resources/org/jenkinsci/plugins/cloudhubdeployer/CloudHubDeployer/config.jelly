@@ -173,7 +173,7 @@
 
       <f:block>
         <table>
-          <f:optionalBlock field="verifyInterval" title="Verify Deployments" checked="${instance==null?true:instance.verifyDeployments}" inline="true">
+          <f:optionalBlock field="verifyDeployments" title="Verify Deployments" checked="${instance==null?true:instance.verifyDeployments}" inline="true">
 
             <f:entry field="verifyIntervalInSeconds" title="${%Verify Interval in Seconds}">
               <f:textbox type="number" default="30000"/>

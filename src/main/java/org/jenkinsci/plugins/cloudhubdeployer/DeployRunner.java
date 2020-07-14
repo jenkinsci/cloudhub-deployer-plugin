@@ -99,6 +99,9 @@ public class DeployRunner {
 
         cloudhubResponseBody = null;
 
+        DeployHelper.logOutputStandard(logger, "Doing " + cloudHubRequest.getRequestMode().toString().toLowerCase()
+                + " request for " + cloudHubRequest.getApiDomainName());
+
         switch(cloudHubRequest.getRequestMode()) {
             case CREATE:
                 cloudhubResponseBody = CloudHubRequestUtils.create(cloudHubRequest);
@@ -142,24 +145,26 @@ public class DeployRunner {
             cloudHubRequest.setAutoScalePolicy(DeployHelper.formatAutoScalePolicy(
                     cloudHubRequest.getAutoScalePolicy()));
 
-            Gson gson = new GsonBuilder()
-                    .excludeFieldsWithoutExposeAnnotation()
-                    .create();
-
-            logger.println(gson.toJson(
-                    cloudHubRequest.getAutoScalePolicy().get(Constants.DEFALT_POLICY_INDEX)));
-
             if(policyJsonArray.size() > 0){
+
+                DeployHelper.logOutputStandard(logger,"Updating autoscale policy for " +
+                        cloudHubRequest.getApiDomainName());
 
                 cloudHubRequest.setAutoScalePolicy(DeployHelper.getFinalAutoScalePolicy(
                         cloudHubRequest.getAutoScalePolicy(),policyJsonArray));
 
                 cloudhubResponseBody = CloudHubRequestUtils.updateAutoScalePolicy(cloudHubRequest);
             }else{
+
+                DeployHelper.logOutputStandard(logger,"Creating autoscale policy for " +
+                        cloudHubRequest.getApiDomainName());
+
                 cloudhubResponseBody = CloudHubRequestUtils.createAutoScalePolicy(cloudHubRequest);
             }
 
-            DeployHelper.logOutputStandard(logger,cloudhubResponseBody);
+            if(cloudhubResponseBody != null)
+                DeployHelper.logOutputStandard(logger,"AutoScale Policy Applied to " +
+                        cloudHubRequest.getApiDomainName());
         }
 
         return apiStatus;

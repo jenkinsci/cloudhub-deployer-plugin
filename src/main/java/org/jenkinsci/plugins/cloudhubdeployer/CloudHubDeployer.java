@@ -233,7 +233,7 @@ public class CloudHubDeployer extends Builder implements SimpleBuildStep {
      */
     @Setter
     @Getter
-    private boolean verifyDeployments = true;
+    private boolean verifyDeployments;
 
     /**
      * Verify Timeout

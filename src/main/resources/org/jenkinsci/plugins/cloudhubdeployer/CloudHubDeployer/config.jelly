@@ -154,7 +154,7 @@
    <f:section title="Add AutoScale Policy">
         <f:block>
             <table>
-                <f:optionalBlock field="enableAutoScalePolicy" title="Enable AutoScale Policy" checked="${instance==null?true:instance.enableAutoScalePolicy}" inline="true">
+                <f:optionalBlock field="enableAutoScalePolicy" title="Enable AutoScale Policy" checked="${instance==null?false:instance.enableAutoScalePolicy}" inline="true">
                     <f:entry  title="${%Policy}">
                         <f:repeatable field="autoScalePolicy" minimum="1" maximum="1" noAddButton="true">
                             <table width="100%">

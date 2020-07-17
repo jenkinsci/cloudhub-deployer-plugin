@@ -386,7 +386,7 @@ public final class CloudHubRequestUtils {
     public static String updateAutoScalePolicy(final CloudHubRequest cloudhubRequest) throws CloudHubRequestException {
 
         HttpPut httpPut = new HttpPut(Constants.CLOUDHUB_URL + Constants.API_URI_V2 + Constants.URI_APPLICATION
-                + "/" + cloudhubRequest.getApiDomainName() + "/autoscalepolicies" +
+                + "/" + cloudhubRequest.getApiDomainName() + "/autoscalepolicies/" +
                 cloudhubRequest.getAutoScalePolicy().get(0).getId());
 
 

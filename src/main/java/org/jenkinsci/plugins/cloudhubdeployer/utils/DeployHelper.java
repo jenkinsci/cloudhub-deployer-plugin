@@ -165,7 +165,6 @@ public final class DeployHelper {
     public static void logOutputStandard(PrintStream logger, String output){
         logger.println();
         logger.println(output);
-        logger.println();
     }
 
     public static void logOutputStandard(PrintStream logger,String headline ,String output){

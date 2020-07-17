@@ -135,6 +135,7 @@ public class DeployRunner {
         }else {
             DeployHelper.logOutputStandard(logger,"Verify deployment is not set. Check API status on CloudHub");
             apiStatus = true;
+            DeployHelper.logOutputStandard(logger,"Deployment Success");
         }
 
 

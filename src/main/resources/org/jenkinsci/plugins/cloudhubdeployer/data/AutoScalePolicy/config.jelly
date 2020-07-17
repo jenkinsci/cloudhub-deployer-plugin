@@ -28,7 +28,7 @@
         <f:number default="5"/>
     </f:entry>
     <f:entry field="scaleUpNextScaleWaitMins" title="${%No Other Policy Will Take Effect For }(Minutes)">
-        <f:number default="20"/>
+        <f:number default="30"/>
     </f:entry>
 
     </f:section>
@@ -42,7 +42,7 @@
         <f:number default="5" />
     </f:entry>
     <f:entry field="scaleDownNextScaleWaitMins" title="${%No Other Policy Will Take Effect For }(Minutes)">
-        <f:number default="20"/>
+        <f:number default="30"/>
     </f:entry>
 
     </f:section>

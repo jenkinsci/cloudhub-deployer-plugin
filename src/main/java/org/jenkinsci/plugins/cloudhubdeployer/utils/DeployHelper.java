@@ -242,7 +242,12 @@ public final class DeployHelper {
 
     public static void validateAutoScalePolicy(List<AutoScalePolicy> policy) throws ValidationException {
 
-        AutoScalePolicy autoScalePolicy = policy.get(Constants.DEFALT_POLICY_INDEX);
+        AutoScalePolicy autoScalePolicy;
+
+        if(policy.size() == 0)
+            throw new ValidationException("No autoscale policy provided");
+
+        autoScalePolicy = policy.get(Constants.DEFALT_POLICY_INDEX);
 
         if(Strings.isNullOrEmpty(autoScalePolicy.getAutoScalePolicyName())){
             throw new ValidationException("Please enter AutoScale Policy Name");

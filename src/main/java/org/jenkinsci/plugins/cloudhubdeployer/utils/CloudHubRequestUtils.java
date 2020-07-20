@@ -80,7 +80,8 @@ public final class CloudHubRequestUtils {
 
         } catch (IOException ioe) {
             cloudhubRequest.getLogger().println(ExceptionUtils.getFullStackTrace(ioe));
-            throw new CloudHubRequestException("CloudHub environment verification under given organization failed.");
+            throw new CloudHubRequestException("Get environment under organization or business group id failed." +
+                    "Check organization or business group id");
         } finally {
             CloudHubRequestUtils.closeHttpClient(httpclient, cloudhubRequest);
         }

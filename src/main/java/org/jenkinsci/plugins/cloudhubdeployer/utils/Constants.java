@@ -15,7 +15,7 @@ public final class Constants {
     public static final String LABEL_CONTENT_TYPE = "Content-Type";
     public static final String LABEL_ACCEPT = "Accept";
     public static final String CLOUDHUB_URL = "https://anypoint.mulesoft.com";
-    public static final String API_URI = "/cloudhub/api/v2";
+    public static final String API_URI_V2 = "/cloudhub/api/v2";
     public static final String API_URI_NO_VERSION = "/cloudhub/api";
     public static final String URI_LOGIN = "/accounts/login";
     public static final String URI_APPLICATION = "/applications";
@@ -29,9 +29,9 @@ public final class Constants {
     public static final String LABEL_AUTHORIZATION = "Authorization";
     public static final String LABEL_AUTOSTART = "autoStart";
     public static final String LABEL_APP_INFO_JSON = "appInfoJson";
-    public static final String LABEL_ACCESS_TOKEN = "access_token";
-    public static final String LABEL_API_STATUS = "status";
-    public static final String LABEL_DEPLOYMENT_UPDATE_STATUS = "deploymentUpdateStatus";
+    public static final String JSON_KEY_ACCESS_TOKEN = "access_token";
+    public static final String JSON_KEY_API_STATUS = "status";
+    public static final String JSON_KEY_DEPLOYMENT_UPDATE_STATUS = "deploymentUpdateStatus";
     public static final int HTTP_OK = 200;
     public static final int HTTP_MULTI_CHOICES = 300;
     public static final String FIELD_VALUE = "Value";
@@ -57,7 +57,9 @@ public final class Constants {
     public static final boolean DEFAULT_OBJECT_STORE_V1 = false;
     public static final boolean DEFAULT_VERIFY_DEPLOYMENTS = true;
     public static final boolean DEFAULT_IGNORE_GLOBAL_SETTINGS = false;
-
+    public static final Boolean DEFAULT_AUTOSCALE_POLICY = false;
+    public static final String JSON_KEY_AUTOSCALE_POLICY_ID = "id";
+    public static final int DEFALT_POLICY_INDEX = 0;
 
 
     private Constants() {

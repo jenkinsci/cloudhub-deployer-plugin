@@ -4,11 +4,11 @@
 	<f:optionalBlock title="Use global settings" inline="true" field="ignoreGlobalSettings" negative="true"
 	            checked="${instance==null?true:!instance.ignoreGlobalSettings}">
 
-        <f:entry title="Organization ID" field="orgId" name="orgId">
+        <f:entry title="Organization or Business Group Id" field="orgId" name="orgId">
             <f:textbox />
         </f:entry>
 
-        <f:entry title="Environment ID" field="environmentId" name="environmentId">
+        <f:entry title="Environment ID or Name" field="environmentId" name="environmentId">
             <f:textbox />
         </f:entry>
 
@@ -151,13 +151,29 @@
           </f:entry>
    </f:section>
 
+   <f:section title="Add AutoScale Policy">
+        <f:block>
+            <table>
+                <f:optionalBlock field="enableAutoScalePolicy" title="Enable AutoScale Policy" checked="${instance==null?false:instance.enableAutoScalePolicy}" inline="true">
+                    <f:entry  title="${%Policy}">
+                        <f:repeatable field="autoScalePolicy" minimum="1" maximum="1" noAddButton="true">
+                            <table width="100%">
+                                <st:include class="${descriptor.clazz}" page="config.jelly" />
+                            </table>
+                        </f:repeatable>
+                    </f:entry>
+                 </f:optionalBlock>
+            </table>
+         </f:block>
+   </f:section>
+
   <f:section title="Advanced Options">
 
   </f:section>
 
-  <f:block>
+      <f:block>
         <table>
-          <f:optionalBlock field="verifyInterval" title="Verify Deployments" checked="${instance==null?true:instance.verifyDeployments}" inline="true">
+          <f:optionalBlock field="verifyDeployments" title="Verify Deployments" checked="${instance==null?true:instance.verifyDeployments}" inline="true">
 
             <f:entry field="verifyIntervalInSeconds" title="${%Verify Interval in Seconds}">
               <f:textbox type="number" default="30000"/>

@@ -2,7 +2,9 @@ package org.jenkinsci.plugins.cloudhubdeployer;
 
 import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.common.StandardCredentials;
-import org.jenkinsci.plugins.cloudhubdeployer.common.ApiStatus;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonArray;
 import org.jenkinsci.plugins.cloudhubdeployer.common.RequestMode;
 import org.jenkinsci.plugins.cloudhubdeployer.exception.CloudHubRequestException;
 import org.jenkinsci.plugins.cloudhubdeployer.exception.ValidationException;
@@ -10,8 +12,6 @@ import org.jenkinsci.plugins.cloudhubdeployer.utils.CloudHubRequestUtils;
 import org.jenkinsci.plugins.cloudhubdeployer.utils.Constants;
 import org.jenkinsci.plugins.cloudhubdeployer.utils.DeployHelper;
 import org.jenkinsci.plugins.cloudhubdeployer.utils.JsonHelper;
-import com.google.gson.Gson;
-import com.google.gson.JsonObject;
 import hudson.FilePath;
 import hudson.Launcher;
 import hudson.model.Run;
@@ -46,25 +46,21 @@ public class DeployRunner {
         String loginResponseRaw;
         String cloudhubResponseBody;
         boolean apiStatus;
-        String artifactPath = "null";
-
-        if(!(cloudHubDeployer.getRequestMode().equals(RequestMode.DELETE)
-                || cloudHubDeployer.getRequestMode().equals(RequestMode.RESTART))){
-            artifactPath = DeployHelper.getArtifactPath(workspace, cloudHubDeployer.getFilePath());
-        }
 
         CloudHubRequest cloudHubRequest = CloudHubRequestFactory.request().withUrl(Constants.CLOUDHUB_URL + Constants.URI_LOGIN)
                 .withApiDomainName(cloudHubDeployer.getAppName())
                 .withCloushubCredentials(StringUtils.isNotBlank(cloudHubDeployer.getCredentialsId()) ?
                         CredentialsProvider.findCredentialById(cloudHubDeployer.getCredentialsId(),
                                 StandardCredentials.class, run) : null)
-                .withFilePath(artifactPath)
+                .withOrgId(cloudHubDeployer.getOrgId())
                 .withEnvironmetId(cloudHubDeployer.getEnvironmentId())
                 .withAutoStart(Boolean.toString(cloudHubDeployer.isAutoStart()))
                 .withTimeoutConnect(cloudHubDeployer.getTimeoutConnection())
                 .withTimeoutResponse(cloudHubDeployer.getTimeoutResponse())
                 .withDebugMode(cloudHubDeployer.getDebugMode())
                 .withRequestMode(cloudHubDeployer.getRequestMode())
+                .withFilePath(workspace, cloudHubDeployer.getFilePath())
+                .withAutoScalepolicy(cloudHubDeployer.getEnableAutoScalePolicy(),cloudHubDeployer.getAutoScalePolicy())
                 .withLogger(logger)
                 .build();
 
@@ -79,27 +75,32 @@ public class DeployRunner {
 
         loginResponseRaw = CloudHubRequestUtils.login(cloudHubRequest);
 
-        if(!JsonHelper.checkIfKeyExists(loginResponseRaw,Constants.LABEL_ACCESS_TOKEN))
+        if(!JsonHelper.checkIfKeyExists(loginResponseRaw,Constants.JSON_KEY_ACCESS_TOKEN))
             throw new CloudHubRequestException("CloudHub login request failed.");
 
 
         cloudHubRequest.setAccessToken(JsonHelper.parseAccessToken(loginResponseRaw));
 
-        if(cloudHubRequest.getRequestMode().compareTo(RequestMode.CREATE_OR_UPDATE) == 0){
-            cloudhubResponseBody = CloudHubRequestUtils.apiList(cloudHubRequest);
+        cloudhubResponseBody = null;
 
-            boolean isApiPresent = JsonHelper.checkIfApiExists(cloudhubResponseBody,cloudHubRequest.getApiDomainName());
+        cloudhubResponseBody = CloudHubRequestUtils.envList(cloudHubRequest);
 
-            if(isApiPresent){
-                DeployHelper.logOutputStandard(logger,cloudHubRequest.getApiDomainName()
-                        + " is already available in cloudhub doing update request.");
-                cloudHubRequest.setRequestMode(RequestMode.UPDATE);
-            }else {
-                DeployHelper.logOutputStandard(logger,cloudHubRequest.getApiDomainName()
-                        + " is not available in cloudhub doing create request.");
-                cloudHubRequest.setRequestMode(RequestMode.CREATE);
+        if(cloudhubResponseBody != null){
+            String envID = DeployHelper.verifyOrGetEnvId(cloudhubResponseBody,cloudHubRequest.getEnvId());
+
+            if(null == envID){
+                throw new CloudHubRequestException("No environment exists with given name or id");
             }
+
+            cloudHubRequest.setEnvId(envID);
         }
+
+        cloudHubRequest.setRequestMode(DeployHelper.getFinalRequestMode(cloudHubRequest));
+
+        cloudhubResponseBody = null;
+
+        DeployHelper.logOutputStandard(logger, "Doing " + cloudHubRequest.getRequestMode().toString().toLowerCase()
+                + " request for " + cloudHubRequest.getApiDomainName());
 
         switch(cloudHubRequest.getRequestMode()) {
             case CREATE:
@@ -122,69 +123,52 @@ public class DeployRunner {
                         "Allowed values CREATE, UPDATE, CREATE_OR_UPDATE, UPDATE_FILE, RESTART or DELETE");
         }
 
-        if(null != cloudhubResponseBody)
-            DeployHelper.logOutputStandard(logger,"API " + cloudHubRequest.getRequestMode().toString().toLowerCase()
+        if(null != cloudhubResponseBody) {
+            DeployHelper.logOutputStandard(logger, "API " + cloudHubRequest.getRequestMode().toString().toLowerCase()
                     + " request on CloudHub is successful");
+        }
+
 
         if(!cloudHubRequest.getRequestMode().equals(RequestMode.DELETE) && cloudHubDeployer.isVerifyDeployments()){
             DeployHelper.logOutputStandard(logger,"Verify deployment is set. Waiting for API to get started.");
-            apiStatus = checkIfApiStarted(cloudHubRequest,logger, cloudHubDeployer.getVerifyIntervalInSeconds());
+            apiStatus = DeployHelper.checkIfApiStarted(cloudHubRequest,logger, cloudHubDeployer.getVerifyIntervalInSeconds());
         }else {
-            DeployHelper.logOutputStandard(logger,"Verify deployment is not set. Check API status on cloudhub");
+            DeployHelper.logOutputStandard(logger,"Verify deployment is not set. Check API status on CloudHub");
             apiStatus = true;
+            DeployHelper.logOutputStandard(logger,"Deployment Success");
+        }
+
+
+        if(cloudHubRequest.isAutoScalePolicyEnabled()){
+
+            JsonArray policyJsonArray = DeployHelper.checkIfAutoScalePolicyExists(cloudHubRequest,logger);
+
+            cloudHubRequest.setAutoScalePolicy(DeployHelper.formatAutoScalePolicy(
+                    cloudHubRequest.getAutoScalePolicy()));
+
+            if(policyJsonArray.size() > 0){
+
+                DeployHelper.logOutputStandard(logger,"Updating autoscale policy for " +
+                        cloudHubRequest.getApiDomainName());
+
+                cloudHubRequest.setAutoScalePolicy(DeployHelper.getFinalAutoScalePolicy(
+                        cloudHubRequest.getAutoScalePolicy(),policyJsonArray));
+
+                cloudhubResponseBody = CloudHubRequestUtils.updateAutoScalePolicy(cloudHubRequest);
+            }else{
+
+                DeployHelper.logOutputStandard(logger,"Creating autoscale policy for " +
+                        cloudHubRequest.getApiDomainName());
+
+                cloudhubResponseBody = CloudHubRequestUtils.createAutoScalePolicy(cloudHubRequest);
+            }
+
+            if(cloudhubResponseBody != null)
+                DeployHelper.logOutputStandard(logger,"AutoScale Policy Applied to " +
+                        cloudHubRequest.getApiDomainName());
         }
 
         return apiStatus;
-    }
-
-    private static boolean checkIfApiStarted(CloudHubRequest cloudHubRequest, PrintStream logger, int verifyIntervalInSeconds)
-            throws CloudHubRequestException, InterruptedException {
-
-        boolean isDeploymentInProgress = true;
-        boolean isApiStarted = false;
-
-        Thread.sleep(Constants.DEFAULT_VERIFY_INITIAL_DELAY);
-        if(cloudHubRequest.getRequestMode().equals(RequestMode.CREATE)){
-            while (isDeploymentInProgress) {
-                String apiStatus = CloudHubRequestUtils.apiStatus(cloudHubRequest);
-                String status = new Gson().fromJson(apiStatus, JsonObject.class)
-                        .get(Constants.LABEL_API_STATUS).getAsString();
-                if(status.equals(ApiStatus.STARTED.toString())){
-                    isDeploymentInProgress = false;
-                    isApiStarted = true;
-                    logger.println("API deployment is completed");
-                }else if(status.equals(ApiStatus.DEPLOYING.toString())){
-                    logger.println("API deployment is in progress");
-                    Thread.sleep(verifyIntervalInSeconds);
-                }else {
-                    logger.println("Deployment failed. Please review the logs");
-                }
-
-            }
-        }else {
-            while (isDeploymentInProgress) {
-                String apiStatus = CloudHubRequestUtils.apiStatus(cloudHubRequest);
-                if (JsonHelper.checkIfKeyExists(apiStatus, Constants.LABEL_DEPLOYMENT_UPDATE_STATUS)) {
-                    String deploymentUpdateStatus = new Gson().fromJson(apiStatus, JsonObject.class)
-                            .get(Constants.LABEL_DEPLOYMENT_UPDATE_STATUS).getAsString();
-                    logger.println("API update is in progress");
-                    Thread.sleep(verifyIntervalInSeconds);
-                }else {
-                    String status = new Gson().fromJson(apiStatus, JsonObject.class)
-                            .get(Constants.LABEL_API_STATUS).getAsString();
-                    if(status.equals(ApiStatus.STARTED.toString())){
-                        isApiStarted = true;
-                        logger.println("API update is completed");
-                    }else {
-                        logger.println("Update failed. Please review the logs");
-                    }
-                    isDeploymentInProgress = false;
-                }
-
-            }
-        }
-
-        return isApiStarted;
     }
 
 }

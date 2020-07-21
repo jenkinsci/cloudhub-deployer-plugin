@@ -7,6 +7,7 @@ import com.cloudbees.plugins.credentials.domains.DomainRequirement;
 import com.cloudbees.plugins.credentials.domains.URIRequirementBuilder;
 import hudson.model.queue.Tasks;
 import org.jenkinsci.plugins.cloudhubdeployer.common.RequestMode;
+import org.jenkinsci.plugins.cloudhubdeployer.data.AutoScalePolicy;
 import org.jenkinsci.plugins.cloudhubdeployer.data.LogLevels;
 import org.jenkinsci.plugins.cloudhubdeployer.exception.CloudHubRequestException;
 import org.jenkinsci.plugins.cloudhubdeployer.exception.ValidationException;
@@ -232,7 +233,7 @@ public class CloudHubDeployer extends Builder implements SimpleBuildStep {
      */
     @Setter
     @Getter
-    private boolean verifyDeployments = true;
+    private boolean verifyDeployments;
 
     /**
      * Verify Timeout
@@ -240,6 +241,15 @@ public class CloudHubDeployer extends Builder implements SimpleBuildStep {
     @Setter
     @Getter
     private int verifyIntervalInSeconds;
+
+    @Setter
+    @Getter
+    private List<AutoScalePolicy> autoScalePolicy;
+
+
+    @Setter
+    @Getter
+    private Boolean enableAutoScalePolicy;
 
     @DataBoundSetter
     public void setRequestMode(RequestMode requestMode) {
@@ -356,6 +366,16 @@ public class CloudHubDeployer extends Builder implements SimpleBuildStep {
         this.verifyIntervalInSeconds = verifyIntervalInSeconds;
     }
 
+    @DataBoundSetter
+    public void setEnableAutoScalePolicy(Boolean enableAutoScalePolicy) {
+        this.enableAutoScalePolicy = enableAutoScalePolicy;
+    }
+
+    @DataBoundSetter
+    public void setAutoScalePolicy(List<AutoScalePolicy> autoScalePolicy) {
+        this.autoScalePolicy = autoScalePolicy;
+    }
+
     // Fields in config.jelly must match the parameter names in the "DataBoundConstructor"
     @DataBoundConstructor
     public CloudHubDeployer(String credentialsId , String environmentId, String orgId,
@@ -371,6 +391,7 @@ public class CloudHubDeployer extends Builder implements SimpleBuildStep {
         this.filePath = filePath;
         this.envVars = new ArrayList<>();
         this.logLevels = new ArrayList<>();
+        this.autoScalePolicy = new ArrayList<>();
         this.timeoutConnection = Constants.TIMEOUT_CONNECTION;
         this.timeoutResponse = Constants.TIMEOUT_RESPONSE;
         this.debugMode = DebugMode.DISABLED;
@@ -389,6 +410,7 @@ public class CloudHubDeployer extends Builder implements SimpleBuildStep {
         this.objectStoreV1 = Constants.DEFAULT_OBJECT_STORE_V1;
         this.verifyDeployments = Constants.DEFAULT_VERIFY_DEPLOYMENTS;
         this.verifyIntervalInSeconds = Constants.API_STATUS_CHECK_DELAY;
+        this.enableAutoScalePolicy = Constants.DEFAULT_AUTOSCALE_POLICY;
 
     }
 
@@ -398,6 +420,7 @@ public class CloudHubDeployer extends Builder implements SimpleBuildStep {
 
         try {
 
+
             if (!this.ignoreGlobalSettings) {
 
                 this.updateFromGlobalConfiguration();
@@ -406,7 +429,7 @@ public class CloudHubDeployer extends Builder implements SimpleBuildStep {
                     throw new CloudHubRequestException("Global settings org Id was not found.");
                 }
                 if (Strings.isNullOrEmpty(this.environmentId)) {
-                    throw new CloudHubRequestException("Global settings environment Id was not found.");
+                    throw new CloudHubRequestException("Global settings environment Id/Name was not found.");
                 }
                 if (Strings.isNullOrEmpty(this.credentialsId)) {
                     throw new CloudHubRequestException("Global settings credentials Id was not found.");

@@ -1,11 +1,19 @@
 package org.jenkinsci.plugins.cloudhubdeployer.utils;
 
+import com.google.api.client.json.Json;
 import com.google.common.base.Strings;
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import org.jenkinsci.plugins.cloudhubdeployer.CloudHubDeployer;
+import org.jenkinsci.plugins.cloudhubdeployer.CloudHubRequest;
+import org.jenkinsci.plugins.cloudhubdeployer.common.ApiStatus;
 import org.jenkinsci.plugins.cloudhubdeployer.common.RequestMode;
 import org.jenkinsci.plugins.cloudhubdeployer.exception.CloudHubRequestException;
 import hudson.FilePath;
 import org.jenkinsci.plugins.cloudhubdeployer.data.*;
+import org.jenkinsci.plugins.cloudhubdeployer.exception.ValidationException;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -18,7 +26,7 @@ import java.util.Map;
 
 public final class DeployHelper {
 
-    public static AppInfoJson buildAppInfoJson(CloudHubDeployer cloudhubDeployer) throws CloudHubRequestException {
+    public static AppInfoJson buildAppInfoJson(CloudHubDeployer cloudhubDeployer) throws ValidationException {
 
         validate(cloudhubDeployer);
 
@@ -64,38 +72,38 @@ public final class DeployHelper {
         return appInfoJson;
     }
 
-    private static void validate(CloudHubDeployer cloudhubDeployer) throws CloudHubRequestException {
+    private static void validate(CloudHubDeployer cloudhubDeployer) throws ValidationException {
 
             if(Strings.isNullOrEmpty(cloudhubDeployer.getWorkerCpu())){
-                throw new CloudHubRequestException("Please enter Worker Cpu");
+                throw new ValidationException("Please enter Worker Cpu");
             }
 
             if(Strings.isNullOrEmpty(cloudhubDeployer.getWorkerMemory())){
-                throw new CloudHubRequestException("Please enter Worker Memory");
+                throw new ValidationException("Please enter Worker Memory");
             }
 
             if(Strings.isNullOrEmpty(cloudhubDeployer.getWorkerType())){
-                throw new CloudHubRequestException("Please enter Worker Type");
+                throw new ValidationException("Please enter Worker Type");
             }
 
             if(Strings.isNullOrEmpty(cloudhubDeployer.getWorkerWeight())){
-                throw new CloudHubRequestException("Please enter Worker Weight");
+                throw new ValidationException("Please enter Worker Weight");
             }
 
             if(cloudhubDeployer.getWorkerAmount() == 0){
-                throw new CloudHubRequestException("Worker Amount can not be zero");
+                throw new ValidationException("Worker Amount can not be zero");
             }
 
             if(Strings.isNullOrEmpty(cloudhubDeployer.getAppName())){
-                throw new CloudHubRequestException("Please enter Application Name");
+                throw new ValidationException("Please enter Application Name");
             }
 
             if(Strings.isNullOrEmpty(cloudhubDeployer.getMuleVersion())){
-                throw new CloudHubRequestException("Please enter Mule Version");
+                throw new ValidationException("Please enter Mule Version");
             }
 
             if(Strings.isNullOrEmpty(cloudhubDeployer.getRegion())){
-                throw new CloudHubRequestException("Please enter Region");
+                throw new ValidationException("Please enter Region");
             }
 
     }
@@ -109,11 +117,11 @@ public final class DeployHelper {
         return finalCpuCapacity;
     }
 
-    private static String formatWorkerMemory(String memoryCapacity) throws CloudHubRequestException {
+    private static String formatWorkerMemory(String memoryCapacity) throws ValidationException {
         String finalMemoryCapacity;
         if (!(memoryCapacity.contains(" MB") ||
                 memoryCapacity.contains(" GB"))) {
-            throw new CloudHubRequestException("Invalid Worker Memory format");
+            throw new ValidationException("Invalid Worker Memory format");
         }
 
         finalMemoryCapacity = memoryCapacity.concat(Constants.SUFFIX_WORKER_MEMORY);
@@ -157,7 +165,6 @@ public final class DeployHelper {
     public static void logOutputStandard(PrintStream logger, String output){
         logger.println();
         logger.println(output);
-        logger.println();
     }
 
     public static void logOutputStandard(PrintStream logger,String headline ,String output){
@@ -167,4 +174,185 @@ public final class DeployHelper {
         logger.println();
     }
 
+    public static RequestMode getFinalRequestMode(CloudHubRequest cloudHubRequest) throws CloudHubRequestException {
+        if(cloudHubRequest.getRequestMode().compareTo(RequestMode.CREATE_OR_UPDATE) == 0){
+            String cloudhubResponseBody = CloudHubRequestUtils.apiList(cloudHubRequest);
+
+            boolean isApiPresent = JsonHelper.checkIfApiExists(cloudhubResponseBody,cloudHubRequest.getApiDomainName());
+
+            if(isApiPresent){
+                return  RequestMode.UPDATE;
+            }else {
+                return RequestMode.CREATE;
+            }
+        }
+
+        return cloudHubRequest.getRequestMode();
+    }
+
+    public static boolean checkIfApiStarted(CloudHubRequest cloudHubRequest, PrintStream logger, int verifyIntervalInSeconds)
+            throws CloudHubRequestException, InterruptedException {
+
+        boolean isDeploymentInProgress = true;
+        boolean isApiStarted = false;
+
+        Thread.sleep(Constants.DEFAULT_VERIFY_INITIAL_DELAY);
+        if(cloudHubRequest.getRequestMode().equals(RequestMode.CREATE)){
+            while (isDeploymentInProgress) {
+                String apiStatus = CloudHubRequestUtils.apiStatus(cloudHubRequest);
+                String status = new Gson().fromJson(apiStatus, JsonObject.class)
+                        .get(Constants.JSON_KEY_API_STATUS).getAsString();
+                if(status.equals(ApiStatus.STARTED.toString())){
+                    isDeploymentInProgress = false;
+                    isApiStarted = true;
+                    logger.println("API deployment is completed");
+                }else if(status.equals(ApiStatus.DEPLOYING.toString())){
+                    logger.println("API deployment is in progress");
+                    Thread.sleep(verifyIntervalInSeconds);
+                }else {
+                    logger.println("Deployment failed. Please review the logs");
+                }
+
+            }
+        }else {
+            while (isDeploymentInProgress) {
+                String apiStatus = CloudHubRequestUtils.apiStatus(cloudHubRequest);
+                if (JsonHelper.checkIfKeyExists(apiStatus, Constants.JSON_KEY_DEPLOYMENT_UPDATE_STATUS)) {
+                    String deploymentUpdateStatus = new Gson().fromJson(apiStatus, JsonObject.class)
+                            .get(Constants.JSON_KEY_DEPLOYMENT_UPDATE_STATUS).getAsString();
+                    logger.println("API update is in progress");
+                    Thread.sleep(verifyIntervalInSeconds);
+                }else {
+                    String status = new Gson().fromJson(apiStatus, JsonObject.class)
+                            .get(Constants.JSON_KEY_API_STATUS).getAsString();
+                    if(status.equals(ApiStatus.STARTED.toString())){
+                        isApiStarted = true;
+                        logger.println("API update is completed");
+                    }else {
+                        logger.println("Update failed. Please review the logs");
+                    }
+                    isDeploymentInProgress = false;
+                }
+
+            }
+        }
+
+        return isApiStarted;
+    }
+
+    public static void validateAutoScalePolicy(List<AutoScalePolicy> policy) throws ValidationException {
+
+        AutoScalePolicy autoScalePolicy;
+
+        if(policy.size() == 0)
+            throw new ValidationException("No autoscale policy provided");
+
+        autoScalePolicy = policy.get(Constants.DEFALT_POLICY_INDEX);
+
+        if(Strings.isNullOrEmpty(autoScalePolicy.getAutoScalePolicyName())){
+            throw new ValidationException("Please enter AutoScale Policy Name");
+        }
+
+        if(Strings.isNullOrEmpty(autoScalePolicy.getScaleBasedOn())){
+            throw new ValidationException("Please enter Scale Based On");
+        }
+
+        if(!(autoScalePolicy.getScaleBasedOn().equals("CPU") ||
+                autoScalePolicy.getScaleBasedOn().equals("MEMORY"))){
+            throw new ValidationException("Value entered for scale based on is incorrect. " +
+                    "Please enter either CPU or MEMORY");
+        }
+
+        if(Strings.isNullOrEmpty(autoScalePolicy.getScaleType())){
+            throw new ValidationException("Please enter scale type");
+        }
+
+        if(!(autoScalePolicy.getScaleType().equals("WORKER_COUNT") ||
+                autoScalePolicy.getScaleType().equals("WORKER_SIZE"))){
+            throw new ValidationException("Value entered for scale type is incorrect. " +
+                    "Please enter either WORKER_COUNT or WORKER_SIZE");
+        }
+
+        if(autoScalePolicy.getMaxScale() < 0){
+            throw new ValidationException("Please enter max scale to");
+        }
+
+        if(autoScalePolicy.getMinScale() < 0){
+            throw new ValidationException("Please enter mix scale to");
+        }
+
+        if(autoScalePolicy.getScaleUpValue() < 0){
+            throw new ValidationException("Please enter threshold value for scale up policy");
+        }
+
+        if(autoScalePolicy.getScaleDownValue() < 0){
+            throw new ValidationException("Please enter threshold value for scale down policy");
+        }
+
+        if(autoScalePolicy.getScaleUpNextScaleWaitMins() < 0){
+            throw new ValidationException("Please enter no other policy will take effect for scale up policy");
+        }
+
+        if(autoScalePolicy.getScaleDownNextScaleWaitMins() < 0){
+            throw new ValidationException("Please enter no other policy will take effect for scale down policy");
+        }
+
+        if(autoScalePolicy.getScaleUpPeriodCount() < 0){
+            throw new ValidationException("Please enter threshold value duration for scale up policy");
+        }
+
+        if(autoScalePolicy.getScaleDownPeriodCount() < 0){
+            throw new ValidationException("Please enter threshold value duration for scale down policy");
+        }
+    }
+
+    public static JsonArray checkIfAutoScalePolicyExists(CloudHubRequest cloudHubRequest, PrintStream logger)
+            throws CloudHubRequestException {
+        String cloudhubResponseBody = CloudHubRequestUtils.getAutoScalePolicy(cloudHubRequest);
+
+        return new Gson().fromJson(cloudhubResponseBody,JsonArray.class);
+    }
+
+    public static List<AutoScalePolicy> getFinalAutoScalePolicy(List<AutoScalePolicy> policyList, JsonArray policyJsonArray) {
+
+        int defaultIndex = Constants.DEFALT_POLICY_INDEX;
+
+        JsonObject jsonObject = policyJsonArray.get(defaultIndex).getAsJsonObject();
+
+        AutoScalePolicy autoScalePolicy = policyList.get(defaultIndex);
+
+        autoScalePolicy.setId(jsonObject.get(Constants.JSON_KEY_AUTOSCALE_POLICY_ID).getAsString());
+        autoScalePolicy.setEnableAutoScalePolicy(true);
+
+        policyList.set(defaultIndex,autoScalePolicy);
+
+        return policyList;
+    }
+
+    public static List<AutoScalePolicy> formatAutoScalePolicy(List<AutoScalePolicy> autoScalePolicyList) {
+
+        Scale scaleUp = new Scale();
+        Scale scaleDown = new Scale();
+
+        AutoScalePolicy autoScalePolicy = autoScalePolicyList.get(Constants.DEFALT_POLICY_INDEX);
+
+        scaleUp.setPeriodCount(autoScalePolicy.getScaleDownPeriodCount());
+        scaleUp.setPeriodMins(1);
+        scaleUp.setValue(autoScalePolicy.getScaleUpValue());
+
+        scaleDown.setPeriodCount(autoScalePolicy.getScaleDownPeriodCount());
+        scaleDown.setPeriodMins(1);
+        scaleDown.setValue(autoScalePolicy.getScaleDownValue());
+
+        autoScalePolicy.setScaleUp(scaleUp);
+        autoScalePolicy.setScaleDown(scaleDown);
+
+        autoScalePolicyList.set(Constants.DEFALT_POLICY_INDEX,autoScalePolicy);
+
+        return autoScalePolicyList;
+    }
+
+    public static String verifyOrGetEnvId(String response, String envIdOrName) throws CloudHubRequestException {
+        return JsonHelper.verifyOrGetEnvId(response,envIdOrName);
+    }
 }

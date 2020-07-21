@@ -23,7 +23,7 @@ After building and installing the plugin, some simple configuration need to done
 required options. Other Option may or may not be needed based on Request Mode.
 1. For few configurations, there are two options
   1. Set them at global plugin configuration level(go to Manage Jenkins -> Configure System -> CloudHub Settings).
-  To use this option dont uncheck the "Use global settings" check box.
+  To use this option don't uncheck the "Use global settings" check box.
      
      ![Plugin global config screen](img/plugin_global_config.PNG)
      
@@ -32,9 +32,9 @@ required options. Other Option may or may not be needed based on Request Mode.
   
      ![Plugin global config job level screen](img/plugin_global_config_job_level.PNG)
      
-1. Fill all other filed accordingly see help section if not sure.
+1. Fill all other field accordingly see help section if not sure.
    
-     ![Plugin configuration screen](img/plugin_configuration.PNG)
+     ![Plugin configuration screen](img/plugin_configuration_v2.PNG)
 
 **Pipeline**
 
@@ -55,15 +55,18 @@ Here are some samples to use the plugin in pipeline script:
 
         node{
 
-            cloudhubDeployer(environmentId :'XXXXX-XXXX-XXX-XXXX-XXXX-XXXXXXXX', orgId :'XXXXX-XXXX-XXX-XXXX-XXXX-XXXXXXXX', 
+            cloudhubDeployer(environmentId :'sandbox', orgId :'XXXXX-XXXX-XXX-XXXX-XXXX-XXXXXXXX', 
             requestMode : RequestMode.CREATE , appName :'some-application-name', credentialsId :'CLOUDHUB_ACCESS', 
             muleVersion :'4.3.0', region :'us-east-1', filePath :'target/*.jar', timeoutConnection : 30000, 
             timeoutResponse : 12000, debugMode : DebugMode.DISABLED, ignoreGlobalSettings : true, autoStart : true, 
             workerAmount : 1, workerType : 'Small', workerWeight : '0.2',workerCpu : '0.2', workerMemory : '1 GB', 
             monitoringEnabled : true, monitoringAutoRestart : true, loggingNgEnabled : true, persistentQueues : false, 
             persistentQueuesEncrypted : false, objectStoreV1 : false, envVars : [envVars(key : 'env' , value :  'dev')], 
-            logLevels : [logLevels(levelCategory : LogLevelCategory.DEBUG ,packageName : 'some package name')], verifyDeployments : true, 
-            verifyIntervalInSeconds: 20000)
+            logLevels : [logLevels(levelCategory : LogLevelCategory.DEBUG ,packageName : 'some package name')], 
+            enableAutoScalePolicy: true, autoScalePolicy: [AutoScalePolicy(autoScalePolicyName: 'sample_policy_name', 
+            maxScale: 8, minScale: 1, scaleBasedOn: 'CPU', scaleDownNextScaleWaitMins: 31, scaleDownPeriodCount: 5, 
+            scaleDownValue: 50, scaleType: 'WORKER_COUNT', scaleUpNextScaleWaitMins: 31, scaleUpPeriodCount: 5, 
+            scaleUpValue: 80)], verifyDeployments : true, verifyIntervalInSeconds: 20000)
         
         }
 
@@ -76,7 +79,7 @@ Here are some samples to use the plugin in pipeline script:
                                                     
        cloudhubDeployer appName: 'some-application-name', filePath: 'target/*.jar', muleVersion: '4.3.0', 
        region: 'us-east-1', requestMode: RequestMode.UPDATE, workerMemory: '1 GB', ignoreGlobalSettings : true,
-       environmentId :'XXXXX-XXXX-XXX-XXXX-XXXX-XXXXXXXX', orgId :'XXXXX-XXXX-XXX-XXXX-XXXX-XXXXXXXX', 
+       environmentId :'sandbox', orgId :'XXXXX-XXXX-XXX-XXXX-XXXX-XXXXXXXX', 
        credentialsId :'CLOUDHUB_ACCESS'
        
 1. Update or create - 
@@ -88,7 +91,7 @@ Here are some samples to use the plugin in pipeline script:
         
         cloudhubDeployer appName: 'some-application-name', filePath: 'target/*.jar', muleVersion: '4.3.0', 
         region: 'us-east-1', requestMode: RequestMode.CREATE_OR_UPDATE, workerMemory: '1 GB', ignoreGlobalSettings : true, 
-        environmentId :'XXXXX-XXXX-XXX-XXXX-XXXX-XXXXXXXX', orgId :'XXXXX-XXXX-XXX-XXXX-XXXX-XXXXXXXX', 
+        environmentId :'sandbox', orgId :'XXXXX-XXXX-XXX-XXXX-XXXX-XXXXXXXX', 
         credentialsId :'CLOUDHUB_ACCESS'
         
         
@@ -100,7 +103,7 @@ Here are some samples to use the plugin in pipeline script:
                                                      OR
                                                      
         cloudhubDeployer appName: 'some-application-name', filePath: 'target/*.jar', requestMode: RequestMode.UPDATE_FILE,
-        ignoreGlobalSettings : true, environmentId :'XXXXX-XXXX-XXX-XXXX-XXXX-XXXXXXXX', orgId :'XXXXX-XXXX-XXX-XXXX-XXXX-XXXXXXXX', 
+        ignoreGlobalSettings : true, environmentId :'sandbox', orgId :'XXXXX-XXXX-XXX-XXXX-XXXX-XXXXXXXX', 
         credentialsId :'CLOUDHUB_ACCESS'
         
 1. Restart API -
@@ -110,7 +113,7 @@ Here are some samples to use the plugin in pipeline script:
                                                      OR
         
         cloudhubDeployer appName: 'some-application-name', requestMode: RequestMode.RESTART, ignoreGlobalSettings : true, 
-        environmentId :'XXXXX-XXXX-XXX-XXXX-XXXX-XXXXXXXX', orgId :'XXXXX-XXXX-XXX-XXXX-XXXX-XXXXXXXX', 
+        environmentId :'sandbox', orgId :'XXXXX-XXXX-XXX-XXXX-XXXX-XXXXXXXX', 
         credentialsId :'CLOUDHUB_ACCESS'
         
 1. Delete API -
@@ -120,8 +123,20 @@ Here are some samples to use the plugin in pipeline script:
                                                      OR
         
         cloudhubDeployer appName: 'some-application-name', requestMode: RequestMode.DELETE, ignoreGlobalSettings : true, 
-        environmentId :'XXXXX-XXXX-XXX-XXXX-XXXX-XXXXXXXX', orgId :'XXXXX-XXXX-XXX-XXXX-XXXX-XXXXXXXX', 
+        environmentId :'sandbox', orgId :'XXXXX-XXXX-XXX-XXXX-XXXX-XXXXXXXX', 
         credentialsId :'CLOUDHUB_ACCESS'
+
+## AutoScale Policy
+
+To enable AutoScale Policy for application, Add below parameters to pipeline script with any of above shown request. If 
+autosocale policy is not already present it will create one or update existing if any changes.
+
+        enableAutoScalePolicy: true, autoScalePolicy: [AutoScalePolicy(autoScalePolicyName: 'sample_policy_name', 
+        maxScale: 8, minScale: 1, scaleBasedOn: 'CPU', scaleDownNextScaleWaitMins: 31, scaleDownPeriodCount: 5, 
+        scaleDownValue: 50, scaleType: 'WORKER_COUNT', scaleUpNextScaleWaitMins: 31, scaleUpPeriodCount: 5, 
+        scaleUpValue: 80)]
+        
+
 
 ## Configuration
 
@@ -137,8 +152,8 @@ The following table lists the configurable parameters for the plugin and their d
 | `muleVersion`               |  `none`                                                     |
 | `region`                    |  `none`                                                     |
 | `filePath`                  |  `none`                                                     |
-| `timeoutConnection`         |  `120000`                                                    |
-| `timeoutResponse`           |  `120000`                                                    |
+| `timeoutConnection`         |  `120000`                                                   |
+| `timeoutResponse`           |  `120000`                                                   |
 | `debugMode`                 |  `disabled`                                                 |
 | `ignoreGlobalSettings`      |  `false`                                                    |
 | `autoStart`                 |  `true`                                                     |
@@ -157,15 +172,16 @@ The following table lists the configurable parameters for the plugin and their d
 | `logLevels`                 |  `[]`                                                       |
 | `verifyDeployments`         |  `true`                                                     |
 | `verifyIntervalInSeconds`   |  `30000`                                                    |
+| `enableAutoScalePolicy`     |  `false`                                                    |
+| `autoScalePolicy`           |  `[]`                                                       |
+
 
 
 
 
 ## TODO LIST
 
-  * Get environment list from cloudhub in drop down menu
   * Unit Tests
-  * Add Support for Autoscale policies
   * Add Support for Load balancer mapping
   * Add Support for API manger
         

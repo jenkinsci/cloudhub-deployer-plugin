@@ -1,6 +1,7 @@
 package org.jenkinsci.plugins.cloudhubdeployer.utils;
 
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import org.jenkinsci.plugins.cloudhubdeployer.CloudHubRequest;
 import org.jenkinsci.plugins.cloudhubdeployer.common.DebugMode;
 import org.jenkinsci.plugins.cloudhubdeployer.exception.CloudHubRequestException;
@@ -23,7 +24,7 @@ import java.io.IOException;
 import java.io.PrintStream;
 
 /**
- * Utility class for HTTP requests to Hashicorp Consul REST API.
+ * Utility class for HTTP requests to CloudHub REST API.
  *
  * @author Vikas Chaudhary
  * @version 1.0.0
@@ -59,9 +60,37 @@ public final class CloudHubRequestUtils {
         return responseBody;
     }
 
+    public static String envList(final CloudHubRequest cloudhubRequest) throws CloudHubRequestException {
+
+        HttpGet httpGet = new HttpGet(Constants.CLOUDHUB_URL + "/accounts/api/organizations/"
+                + cloudhubRequest.getOrgId() + "/environments" );
+
+        CloseableHttpClient httpclient = HttpClients.createDefault();
+
+        httpGet.addHeader(Constants.LABEL_AUTHORIZATION,"Bearer " + cloudhubRequest.getAccessToken());
+
+        String responseBody = null;
+
+        try {
+
+            ResponseHandler<String> responseHandler = CloudHubRequestUtils.getResponseHandler(cloudhubRequest
+                    .getDebugMode(), cloudhubRequest.getLogger());
+
+            responseBody = httpclient.execute(httpGet, responseHandler);
+
+        } catch (IOException ioe) {
+            cloudhubRequest.getLogger().println(ExceptionUtils.getFullStackTrace(ioe));
+            throw new CloudHubRequestException("Get environment under organization or business group id failed." +
+                    "Check organization or business group id");
+        } finally {
+            CloudHubRequestUtils.closeHttpClient(httpclient, cloudhubRequest);
+        }
+        return responseBody;
+    }
+
     public static String create(final CloudHubRequest cloudhubRequest) throws CloudHubRequestException {
 
-        HttpPost httpPost = new HttpPost(Constants.CLOUDHUB_URL + Constants.API_URI + Constants.URI_APPLICATION);
+        HttpPost httpPost = new HttpPost(Constants.CLOUDHUB_URL + Constants.API_URI_V2 + Constants.URI_APPLICATION);
 
         CloseableHttpClient httpclient = HttpClients.createDefault();
 
@@ -100,7 +129,7 @@ public final class CloudHubRequestUtils {
 
     public static String update(final CloudHubRequest cloudhubRequest) throws CloudHubRequestException {
 
-        HttpPut httpPut = new HttpPut(Constants.CLOUDHUB_URL + Constants.API_URI + Constants.URI_APPLICATION
+        HttpPut httpPut = new HttpPut(Constants.CLOUDHUB_URL + Constants.API_URI_V2 + Constants.URI_APPLICATION
                         + "/" + cloudhubRequest.getApiDomainName());
 
         CloseableHttpClient httpclient = HttpClients.createDefault();
@@ -140,7 +169,7 @@ public final class CloudHubRequestUtils {
 
     public static String updateFile(final CloudHubRequest cloudhubRequest) throws CloudHubRequestException {
 
-        HttpPost httpPost = new HttpPost(Constants.CLOUDHUB_URL + Constants.API_URI + Constants.URI_APPLICATION
+        HttpPost httpPost = new HttpPost(Constants.CLOUDHUB_URL + Constants.API_URI_V2 + Constants.URI_APPLICATION
                     + "/" + cloudhubRequest.getApiDomainName() + "/files");
 
         CloseableHttpClient httpclient = HttpClients.createDefault();
@@ -176,7 +205,7 @@ public final class CloudHubRequestUtils {
 
     public static String delete(final CloudHubRequest cloudhubRequest) throws CloudHubRequestException {
 
-        HttpDelete httpDelete = new HttpDelete(Constants.CLOUDHUB_URL + Constants.API_URI +
+        HttpDelete httpDelete = new HttpDelete(Constants.CLOUDHUB_URL + Constants.API_URI_V2 +
                 Constants.URI_APPLICATION + "/" + cloudhubRequest.getApiDomainName());
 
         CloseableHttpClient httpclient = HttpClients.createDefault();
@@ -235,7 +264,7 @@ public final class CloudHubRequestUtils {
 
     public static String apiStatus(final CloudHubRequest cloudhubRequest) throws CloudHubRequestException {
 
-        HttpGet httpGet = new HttpGet(Constants.CLOUDHUB_URL + Constants.API_URI + Constants.URI_APPLICATION
+        HttpGet httpGet = new HttpGet(Constants.CLOUDHUB_URL + Constants.API_URI_V2 + Constants.URI_APPLICATION
                 + "/"+ cloudhubRequest.getApiDomainName());
 
         CloseableHttpClient httpclient = HttpClients.createDefault();
@@ -264,7 +293,7 @@ public final class CloudHubRequestUtils {
 
     public static String apiList(final CloudHubRequest cloudhubRequest) throws CloudHubRequestException {
 
-        HttpGet httpGet = new HttpGet(Constants.CLOUDHUB_URL + Constants.API_URI + Constants.URI_APPLICATION);
+        HttpGet httpGet = new HttpGet(Constants.CLOUDHUB_URL + Constants.API_URI_V2 + Constants.URI_APPLICATION);
 
         CloseableHttpClient httpclient = HttpClients.createDefault();
 
@@ -284,6 +313,109 @@ public final class CloudHubRequestUtils {
         } catch (IOException ioe) {
             cloudhubRequest.getLogger().println(ExceptionUtils.getFullStackTrace(ioe));
             throw new CloudHubRequestException("Cloudhub api list check failed.");
+        } finally {
+            CloudHubRequestUtils.closeHttpClient(httpclient, cloudhubRequest);
+        }
+        return responseBody;
+    }
+
+    public static String createAutoScalePolicy(final CloudHubRequest cloudhubRequest) throws CloudHubRequestException {
+
+        HttpPost httpPost = new HttpPost(Constants.CLOUDHUB_URL + Constants.API_URI_V2 + Constants.URI_APPLICATION
+                + "/" + cloudhubRequest.getApiDomainName() + "/autoscalepolicies");
+
+
+        CloseableHttpClient httpclient = HttpClients.createDefault();
+
+        httpPost.addHeader(Constants.LABEL_ANYPNT_ENV_ID,cloudhubRequest.getEnvId());
+        httpPost.addHeader(Constants.LABEL_AUTHORIZATION,"Bearer " + cloudhubRequest.getAccessToken());
+        httpPost.addHeader(Constants.LABEL_ACCEPT, Constants.MEDIA_TYPE_APP_JSON);
+        httpPost.addHeader(Constants.LABEL_CONTENT_TYPE, Constants.MEDIA_TYPE_APP_JSON);
+
+        String responseBody = null;
+
+        Gson gson = new GsonBuilder().excludeFieldsWithoutExposeAnnotation().create();
+
+        try {
+
+            httpPost.setEntity(new StringEntity(gson.toJson(cloudhubRequest.getAutoScalePolicy().get(0))));
+
+            ResponseHandler<String> responseHandler = CloudHubRequestUtils.getResponseHandler(cloudhubRequest
+                    .getDebugMode(), cloudhubRequest.getLogger());
+
+            responseBody = httpclient.execute(httpPost, responseHandler);
+
+        } catch (IOException ioe) {
+            cloudhubRequest.getLogger().println(ExceptionUtils.getFullStackTrace(ioe));
+            throw new CloudHubRequestException("Cloudhub create autoscale policy call failed.");
+        } finally {
+            CloudHubRequestUtils.closeHttpClient(httpclient, cloudhubRequest);
+        }
+        return responseBody;
+    }
+
+    public static String getAutoScalePolicy(final CloudHubRequest cloudhubRequest) throws CloudHubRequestException {
+
+        HttpGet httpPut = new HttpGet(Constants.CLOUDHUB_URL + Constants.API_URI_V2 + Constants.URI_APPLICATION
+                + "/" + cloudhubRequest.getApiDomainName() + "/autoscalepolicies");
+
+
+        CloseableHttpClient httpclient = HttpClients.createDefault();
+
+        httpPut.addHeader(Constants.LABEL_ANYPNT_ENV_ID,cloudhubRequest.getEnvId());
+        httpPut.addHeader(Constants.LABEL_AUTHORIZATION,"Bearer " + cloudhubRequest.getAccessToken());
+        httpPut.addHeader(Constants.LABEL_ACCEPT, Constants.MEDIA_TYPE_APP_JSON);
+
+        String responseBody = null;
+
+        try {
+
+            ResponseHandler<String> responseHandler = CloudHubRequestUtils.getResponseHandler(cloudhubRequest
+                    .getDebugMode(), cloudhubRequest.getLogger());
+
+            responseBody = httpclient.execute(httpPut, responseHandler);
+
+        } catch (IOException ioe) {
+            cloudhubRequest.getLogger().println(ExceptionUtils.getFullStackTrace(ioe));
+            throw new CloudHubRequestException("Cloudhub get autoscale policies call failed.");
+        } finally {
+            CloudHubRequestUtils.closeHttpClient(httpclient, cloudhubRequest);
+        }
+        return responseBody;
+    }
+
+    public static String updateAutoScalePolicy(final CloudHubRequest cloudhubRequest) throws CloudHubRequestException {
+
+        HttpPut httpPut = new HttpPut(Constants.CLOUDHUB_URL + Constants.API_URI_V2 + Constants.URI_APPLICATION
+                + "/" + cloudhubRequest.getApiDomainName() + "/autoscalepolicies/" +
+                cloudhubRequest.getAutoScalePolicy().get(0).getId());
+
+
+        CloseableHttpClient httpclient = HttpClients.createDefault();
+
+        httpPut.addHeader(Constants.LABEL_ANYPNT_ENV_ID,cloudhubRequest.getEnvId());
+        httpPut.addHeader(Constants.LABEL_AUTHORIZATION,"Bearer " + cloudhubRequest.getAccessToken());
+        httpPut.addHeader(Constants.LABEL_CONTENT_TYPE, Constants.MEDIA_TYPE_APP_JSON);
+        httpPut.addHeader(Constants.LABEL_ACCEPT, Constants.MEDIA_TYPE_APP_JSON);
+
+        String responseBody = null;
+
+        Gson gson = new GsonBuilder().excludeFieldsWithoutExposeAnnotation().create();
+
+        try {
+
+
+            httpPut.setEntity(new StringEntity(gson.toJson(
+                    cloudhubRequest.getAutoScalePolicy().get(Constants.DEFALT_POLICY_INDEX))));
+
+            ResponseHandler<String> responseHandler = CloudHubRequestUtils.getResponseHandler(cloudhubRequest
+                    .getDebugMode(), cloudhubRequest.getLogger());
+
+            responseBody = httpclient.execute(httpPut, responseHandler);
+
+        } catch (IOException ioe) {
+            cloudhubRequest.getLogger().println(ExceptionUtils.getFullStackTrace(ioe));
+            throw new CloudHubRequestException("Cloudhub update autoscale policies call Failed.");
         } finally {
             CloudHubRequestUtils.closeHttpClient(httpclient, cloudhubRequest);
         }
